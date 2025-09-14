@@ -1,0 +1,43 @@
+{
+  "name": "smart-contract-token-checker",
+  "version": "3.0.0",
+  "description": "Advanced multi-chain token inspector with comprehensive analysis. Support for Ethereum, Polygon, BSC with market data, holders analysis, and contract details. Beautiful dark UI with golden accents.",
+  "main": "popup.js",
+  "scripts": {
+    "build": "node generate_icons.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "chrome-extension",
+    "ethereum",
+    "polygon",
+    "bsc",
+    "erc20",
+    "token",
+    "blockchain",
+    "web3",
+    "smart-contract",
+    "token-inspector",
+    "contract-analysis",
+    "market-data",
+    "holders-analysis",
+    "multi-chain",
+    "defi",
+    "crypto-tools",
+    "coingecko",
+    "etherscan"
+  ],
+  "author": "Mohammad Nasser Haji hashemabad (Nasser Hashemabadi)",
+  "license": "MIT",
+  "homepage": "https://github.com/naserhha/smart-contract-token-checker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naserhha/smart-contract-token-checker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/naserhha/smart-contract-token-checker/issues"
+  },
+  "devDependencies": {
+    "canvas": "^2.11.2"
+  }
+}

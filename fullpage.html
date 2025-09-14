@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Inspector - Full Page</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="dark-mode.css">
+    <style>
+        /* Full page specific styles */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        .results-section {
+            margin-bottom: 30px;
+        }
+        
+        .info-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        .token-header-card {
+            margin-bottom: 30px;
+        }
+        
+        .info-section {
+            margin-bottom: 20px;
+        }
+        
+        /* Responsive design for full page */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="icon">🔍</div>
+                <div>
+                    <h1>Token Inspector</h1>
+                    <div class="header-subtitle">Multi-Chain Analyzer - Full Page</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" id="openAsPopup" title="Open as Popup">
+                    📱
+                </button>
+                <button class="dark-mode-toggle" id="darkModeToggle" title="Toggle Dark Mode">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -6.56 -10.029a2.460 2.460 0 0 0 -.753 0a7.5 7.5 0 0 0 -1.6 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="input-section">
+            <div class="network-selector">
+                <label for="networkSelect">Network:</label>
+                <select id="networkSelect" class="network-select">
+                    <option value="ethereum">Ethereum</option>
+                    <option value="polygon">Polygon</option>
+                    <option value="bsc">BSC (Binance Smart Chain)</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <div class="input-label">Contract Address</div>
+                    <input 
+                        type="text" 
+                        id="contractInput" 
+                        placeholder="Enter contract address (0x...)" 
+                        maxlength="42"
+                    >
+                </div>
+                <button id="inspectBtn" class="inspect-btn">
+                    <span class="btn-text">Check Token</span>
+                    <div class="loading-spinner" style="display: none;"></div>
+                </button>
+            </div>
+            <div class="error-message" id="errorMessage" style="display: none;">
+                <div class="error-text"></div>
+            </div>
+            <div class="success-message" id="successMessage" style="display: none;">
+                <div class="success-text"></div>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <!-- Token Header Card -->
+            <div class="token-header-card">
+                <div class="token-icon" id="tokenIcon">🪙</div>
+                <div class="token-info">
+                    <div class="token-name" id="tokenName">-</div>
+                    <div class="token-symbol" id="tokenSymbol">-</div>
+                    <div class="token-price" id="tokenPrice">-</div>
+                </div>
+                <div class="token-actions">
+                    <button class="action-btn" id="etherscanBtn" title="View on Explorer">
+                        🔗
+                    </button>
+                    <button class="action-btn" id="copyAddressBtn" title="Copy Address">
+                        📋
+                    </button>
+                    <button class="action-btn" id="openNewTabBtn" title="Open in New Tab">
+                        🆕
+                    </button>
+                    <button class="action-btn" id="openSameTabBtn" title="Open in Same Tab">
+                        🔄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Basic Token Information -->
+            <div class="info-section">
+                <h3>Token Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Name:</label>
+                        <span id="tokenNameValue">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Symbol:</label>
+                        <span id="tokenSymbolValue">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Decimals:</label>
+                        <span id="tokenDecimals">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Total Supply:</label>
+                        <span id="tokenSupply">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Contract Address:</label>
+                        <span id="tokenAddress">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Network:</label>
+                        <span id="tokenNetwork">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Information -->
+            <div class="info-section" id="marketInfo" style="display: none;">
+                <h3>Market Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Price (USD):</label>
+                        <span id="tokenPriceValue">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Market Cap:</label>
+                        <span id="tokenMarketCap">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>24h Change:</label>
+                        <span id="token24hChange">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Information -->
+            <div class="info-section" id="contractInfo" style="display: none;">
+                <h3>Contract Information</h3>
+                <div class="info-grid">
+                    <div class="info-item" id="ownerItem" style="display: none;">
+                        <label>Owner/Creator:</label>
+                        <span id="tokenOwner">-</span>
+                    </div>
+                    <div class="info-item" id="deployedBlockItem" style="display: none;">
+                        <label>Deployed Block:</label>
+                        <span id="tokenDeployedBlock">-</span>
+                    </div>
+                    <div class="info-item" id="verifiedItem" style="display: none;">
+                        <label>Verified:</label>
+                        <span id="tokenVerified">-</span>
+                    </div>
+                    <div class="info-item" id="statusItem" style="display: none;">
+                        <label>Status:</label>
+                        <span id="tokenStatus">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Holders Information -->
+            <div class="info-section" id="holdersInfo" style="display: none;">
+                <h3>Holders Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Holders Count:</label>
+                        <span id="tokenHoldersCount">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Transfers Count:</label>
+                        <span id="tokenTransfersCount">-</span>
+                    </div>
+                </div>
+                <div class="top-holders" id="topHolders" style="display: none;">
+                    <h4>Top 5 Holders</h4>
+                    <div class="holders-list" id="holdersList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-section" id="recentSection" style="display: none;">
+            <h3>Recent Contracts</h3>
+            <div class="recent-list" id="recentList"></div>
+        </div>
+    </div>
+
+    <script src="lib/rpc.js"></script>
+    <script src="popup.js"></script>
+    <script>
+        // Override the openPopupInNewTabHandler for full page
+        if (window.TokenInspectorApp) {
+            const app = new TokenInspectorApp();
+            
+            // Override the openPopupInNewTabHandler
+            app.openPopupInNewTabHandler = function() {
+                // In full page mode, this should open as popup
+                try {
+                    const popupUrl = chrome.runtime.getURL('popup.html');
+                    chrome.tabs.create({ 
+                        url: popupUrl,
+                        active: true
+                    });
+                } catch (error) {
+                    console.error('Failed to open popup:', error);
+                }
+            };
+            
+            // Add event listener for "Open as Popup" button
+            const openAsPopupBtn = document.getElementById('openAsPopup');
+            if (openAsPopupBtn) {
+                openAsPopupBtn.addEventListener('click', () => {
+                    app.openPopupInNewTabHandler();
+                });
+            }
+        }
+    </script>
+</body>
+</html>

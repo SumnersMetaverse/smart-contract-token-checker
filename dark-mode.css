@@ -1,0 +1,96 @@
+/* Dark Mode Toggle Styles */
+.dark-mode-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+}
+
+.dark-mode-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.dark-mode-toggle svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--text-inverse);
+    transition: all var(--transition-normal);
+}
+
+.dark-mode-toggle:hover svg {
+    transform: rotate(180deg);
+}
+
+/* Dark mode specific styles */
+[data-theme="dark"] {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --border-color: #334155;
+    --border-light: #475569;
+}
+
+[data-theme="dark"] .container {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .token-card {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .detail-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .recent-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .input-section {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .recent-section {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .footer {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+/* Theme transition */
+* {
+    transition: background-color var(--transition-normal), 
+                border-color var(--transition-normal), 
+                color var(--transition-normal);
+}
+
+/* Dark mode toggle animation */
+@keyframes themeSwitch {
+    0% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.2) rotate(180deg); }
+    100% { transform: scale(1) rotate(360deg); }
+}
+
+.dark-mode-toggle.switching {
+    animation: themeSwitch 0.6s ease-in-out;
+}
