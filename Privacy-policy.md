@@ -1,6 +1,6 @@
 # Privacy Policy for Smart Contract Token Checker – ERC20 Inspector
 
-**Last Updated: September 14, 2024**
+**Last Updated: September 14, 2025**
 
 ## Introduction
 
