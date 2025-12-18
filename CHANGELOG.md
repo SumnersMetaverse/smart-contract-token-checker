@@ -2,6 +2,32 @@
 
 All notable changes to the Advanced Token Inspector extension will be documented in this file.
 
+## [3.1.0] - 2024-01-XX
+
+### Added
+- **Asset Verification System**: Integration with mempool.space and meta-earth repository
+- **Multi-Source Verification**: Comprehensive verification across multiple sources
+- **Verification Badges**: Visual indicators for verification status
+- **Meta-Earth Repository**: Community-curated catalog of verified contracts
+- **Mempool.space Integration**: Bitcoin blockchain verification support
+- **Verification Levels**: Clear indication of verification status (Verified, Listed, Partial, Unverified)
+- **Security Checks**: Multi-source verification for contract authenticity
+- **Verification Details**: Detailed breakdown of verification sources
+- **Assets Catalog**: Reference catalog for verified contracts
+
+### Enhanced
+- **Security**: Added multi-source verification for better security
+- **UI**: New verification section with status badges
+- **User Confidence**: Clear visibility into contract verification status
+- **Documentation**: Updated README with verification feature details
+
+### Technical Improvements
+- **New Module**: `lib/verification.js` for asset verification
+- **API Integration**: mempool.space API for Bitcoin verification
+- **GitHub Integration**: Meta-earth repository for contract catalog
+- **Caching**: Verification results cached for performance
+- **Parallel Processing**: Multiple verification sources checked simultaneously
+
 ## [3.0.0] - 2024-01-XX
 
 ### Added

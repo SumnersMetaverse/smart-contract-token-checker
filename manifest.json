@@ -24,7 +24,9 @@
     "https://assets.coingecko.com/*",
     "https://etherscan.io/*",
     "https://polygonscan.com/*",
-    "https://bscscan.com/*"
+    "https://bscscan.com/*",
+    "https://mempool.space/*",
+    "https://raw.githubusercontent.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
