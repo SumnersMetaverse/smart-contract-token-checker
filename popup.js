@@ -116,6 +116,18 @@ class TokenInspectorApp {
         this.validationStatsSection = document.getElementById('validationStatsSection');
         this.statsGrid = document.getElementById('statsGrid');
         this.closeStatsBtn = document.getElementById('closeStatsBtn');
+        
+        // Batch validation elements
+        this.batchValidationSection = document.getElementById('batchValidationSection');
+        this.batchValidateBtn = document.getElementById('batchValidateBtn');
+        this.closeBatchBtn = document.getElementById('closeBatchBtn');
+        this.batchInput = document.getElementById('batchInput');
+        this.batchNetworkSelect = document.getElementById('batchNetworkSelect');
+        this.startBatchValidationBtn = document.getElementById('startBatchValidationBtn');
+        this.batchProgress = document.getElementById('batchProgress');
+        this.progressFill = document.getElementById('progressFill');
+        this.progressText = document.getElementById('progressText');
+        this.batchResults = document.getElementById('batchResults');
     }
 
     /**
@@ -166,6 +178,11 @@ class TokenInspectorApp {
         this.validationStatsBtn.addEventListener('click', () => this.showValidationStats());
         this.closeValidatedBtn.addEventListener('click', () => this.hideValidatedContracts());
         this.closeStatsBtn.addEventListener('click', () => this.hideValidationStats());
+        
+        // Batch validation buttons
+        this.batchValidateBtn.addEventListener('click', () => this.showBatchValidation());
+        this.closeBatchBtn.addEventListener('click', () => this.hideBatchValidation());
+        this.startBatchValidationBtn.addEventListener('click', () => this.handleBatchValidation());
     }
 
     /**
@@ -1050,6 +1067,145 @@ class TokenInspectorApp {
      */
     hideValidationStats() {
         this.validationStatsSection.style.display = 'none';
+    }
+
+    /**
+     * Show batch validation section
+     */
+    showBatchValidation() {
+        this.batchValidationSection.style.display = 'block';
+        this.validatedContractsSection.style.display = 'none';
+        this.validationStatsSection.style.display = 'none';
+        
+        // Set default network
+        this.batchNetworkSelect.value = this.currentNetwork;
+        
+        // Clear previous results
+        this.batchInput.value = '';
+        this.batchResults.style.display = 'none';
+        this.batchProgress.style.display = 'none';
+    }
+
+    /**
+     * Hide batch validation section
+     */
+    hideBatchValidation() {
+        this.batchValidationSection.style.display = 'none';
+    }
+
+    /**
+     * Handle batch validation
+     */
+    async handleBatchValidation() {
+        const inputText = this.batchInput.value.trim();
+        
+        if (!inputText) {
+            this.showError('Please enter at least one contract address');
+            return;
+        }
+        
+        // Parse addresses (one per line)
+        const addresses = inputText
+            .split('\n')
+            .map(addr => addr.trim())
+            .filter(addr => addr.length > 0);
+        
+        if (addresses.length === 0) {
+            this.showError('No valid addresses found');
+            return;
+        }
+        
+        const network = this.batchNetworkSelect.value;
+        
+        // Prepare contracts array
+        const contracts = addresses.map(address => ({
+            address,
+            network
+        }));
+        
+        try {
+            // Disable button and show progress
+            this.startBatchValidationBtn.disabled = true;
+            this.batchProgress.style.display = 'block';
+            this.batchResults.style.display = 'none';
+            this.hideError();
+            
+            // Initialize progress
+            this.progressFill.style.width = '0%';
+            this.progressText.textContent = `Processing 0 of ${contracts.length} contracts...`;
+            
+            // Perform batch validation
+            const result = await this.verificationManager.initiateMultipleVerifications(contracts);
+            
+            // Update progress to 100%
+            this.progressFill.style.width = '100%';
+            this.progressText.textContent = `Completed! Processed ${result.total} contracts`;
+            
+            // Display results
+            this.displayBatchResults(result);
+            
+            // Show success message
+            this.showSuccess(`Batch validation completed: ${result.initiated} succeeded, ${result.failed} failed`);
+            
+        } catch (error) {
+            console.error('Batch validation error:', error);
+            this.showError('Batch validation failed: ' + error.message);
+        } finally {
+            this.startBatchValidationBtn.disabled = false;
+        }
+    }
+
+    /**
+     * Display batch validation results
+     * @param {Object} result - Batch validation result
+     */
+    displayBatchResults(result) {
+        this.batchResults.style.display = 'block';
+        
+        let html = '<div class="batch-results-content">';
+        
+        // Summary
+        html += '<div class="batch-summary">';
+        html += `<h4>Validation Summary</h4>`;
+        html += `<div class="summary-stats">`;
+        html += `<div class="summary-stat success">✓ Initiated: ${result.initiated}</div>`;
+        html += `<div class="summary-stat failed">✗ Failed: ${result.failed}</div>`;
+        html += `<div class="summary-stat total">Total: ${result.total}</div>`;
+        html += `</div>`;
+        html += '</div>';
+        
+        // Individual results
+        html += '<div class="individual-results">';
+        html += '<h4>Individual Results</h4>';
+        
+        result.details.forEach((detail, index) => {
+            const statusClass = detail.success ? 'success' : 'failed';
+            const statusIcon = detail.success ? '✓' : '✗';
+            
+            html += `<div class="result-item ${statusClass}">`;
+            html += `<div class="result-header">`;
+            html += `<span class="result-icon">${statusIcon}</span>`;
+            html += `<strong>#${index + 1}</strong>`;
+            html += `<code>${detail.validationResult?.address || detail.address}</code>`;
+            html += `</div>`;
+            
+            if (detail.success) {
+                html += `<div class="result-details">`;
+                html += `<span class="label">Identifier:</span> <code>${detail.identifier}</code>`;
+                html += `</div>`;
+            } else {
+                html += `<div class="result-details error">`;
+                html += `<span class="label">Error:</span> ${detail.error || detail.message}`;
+                html += `</div>`;
+            }
+            
+            html += `</div>`;
+        });
+        
+        html += '</div>';
+        html += '</div>';
+        
+        this.batchResults.innerHTML = html;
     }
 }
 
