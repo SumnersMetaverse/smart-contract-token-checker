@@ -1,7 +1,7 @@
 {
   "name": "smart-contract-token-checker",
-  "version": "3.0.0",
-  "description": "Advanced multi-chain token inspector with comprehensive analysis. Support for Ethereum, Polygon, BSC with market data, holders analysis, and contract details. Beautiful dark UI with golden accents.",
+  "version": "3.1.0",
+  "description": "Advanced multi-chain token inspector with comprehensive analysis and wallet integration. Support for Ethereum, Polygon, BSC with market data, holders analysis, token sending, and contract details. Beautiful dark UI with golden accents.",
   "main": "popup.js",
   "scripts": {
     "build": "node generate_icons.js",

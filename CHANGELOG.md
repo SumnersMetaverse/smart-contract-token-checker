@@ -2,6 +2,61 @@
 
 All notable changes to the Advanced Token Inspector extension will be documented in this file.
 
+## [3.1.0] - 2024-12-XX
+
+### Added - Wallet Integration & Token Sending
+- **Wallet Connection**: MetaMask integration for Web3 wallet connection
+- **Token Sending**: Send ERC20 tokens directly from the extension interface
+- **Transaction History**: Complete transaction tracking and history management
+- **Balance Checking**: Real-time balance checking for connected wallet addresses
+- **Gas Estimation**: Automatic gas estimation for token transfer transactions
+- **Transaction Status Monitoring**: Track pending, successful, and failed transactions
+- **Send Token Modal**: Beautiful modal interface for sending tokens with validation
+- **Transaction History Modal**: View and manage all past token transfers
+- **Wallet Status Indicator**: Visual indicator in header showing connection status
+- **Network Synchronization**: Automatic detection and switching of wallet network
+- **MAX Button**: Quick button to send entire token balance
+- **Transaction Confirmation**: Wait for transaction confirmations in background
+
+### Enhanced - Security & Validation
+- **Address Validation**: Comprehensive validation of recipient addresses before sending
+- **Amount Validation**: Ensures amounts are positive and properly formatted
+- **Transaction Safety**: All transactions require explicit MetaMask confirmation
+- **Error Handling**: User-friendly error messages for all transaction failures
+- **Input Validation**: Real-time validation feedback for form inputs
+
+### Technical Improvements
+- **WalletConnector Class**: Complete wallet management system (`lib/wallet.js`)
+- **TokenContract Class**: ERC20 contract interaction layer (`lib/contracts.js`)
+- **TransactionManager Class**: Transaction history and tracking system
+- **Background Script Enhancement**: Transaction storage and retrieval handlers
+- **Event Listeners**: Wallet account and network change detection
+- **Gas Calculation**: Accurate transaction fee estimation
+- **Balance Queries**: Token balance checking via contract calls
+- **Transaction Encoding**: Proper encoding of ERC20 transfer function calls
+
+### UI/UX Improvements
+- **Wallet Connect Button**: Prominent header button with connection status
+- **Send Token Button**: Easy access button for sending tokens (💸 icon)
+- **Modal Dialogs**: Professional modal interfaces for sending and history
+- **Loading States**: Clear feedback during transaction processing
+- **Success/Error Messages**: Clear visual feedback for all operations
+- **Formatted Addresses**: Shortened address display (0x1234...5678)
+- **Transaction List**: Clean, organized transaction history display
+- **Responsive Design**: Modal dialogs work well on all screen sizes
+
+### Compatibility
+- **MetaMask Support**: Full integration with MetaMask browser extension
+- **Multi-Network**: Works with Ethereum, Polygon, and BSC networks
+- **ERC20 Standard**: Complete support for standard ERC20 token transfers
+- **Chrome Extension**: Maintains Manifest V3 compliance
+
+### Security Features
+- **No Private Key Storage**: Never stores or requests private keys
+- **Local Transaction History**: All history stored locally on user's device
+- **Permission Management**: Proper Chrome extension permissions
+- **Transaction Validation**: All transactions validated before submission
+
 ## [3.0.0] - 2024-01-XX
 
 ### Added
