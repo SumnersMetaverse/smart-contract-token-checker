@@ -38,7 +38,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["fullpage.html"],
+      "resources": ["fullpage.html", "lib/*"],
       "matches": ["<all_urls>"]
     }
   ],
@@ -55,11 +55,5 @@
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "author": "Mohammad Nasser Haji hashemabad (Nasser Hashemabadi)",
-  "homepage_url": "https://github.com/naserhha/smart-contract-token-checker",
-  "web_accessible_resources": [
-    {
-      "resources": ["lib/*"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "homepage_url": "https://github.com/naserhha/smart-contract-token-checker"
 }
