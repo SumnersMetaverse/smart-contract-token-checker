@@ -20,6 +20,12 @@ try {
     // Icon sizes needed
     const sizes = [16, 32, 48, 128];
     
+    // Design constants
+    const BORDER_WIDTH_RATIO = 32; // Divide size by this for border width
+    const STROKE_WIDTH_RATIO = 16; // Divide size by this for stroke width
+    const MIN_BORDER_WIDTH = 2;
+    const MIN_STROKE_WIDTH = 2;
+    
     sizes.forEach(size => {
         const canvas = createCanvas(size, size);
         const ctx = canvas.getContext('2d');
@@ -33,7 +39,7 @@ try {
         
         // Add a border
         ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = Math.max(2, size / 32);
+        ctx.lineWidth = Math.max(MIN_BORDER_WIDTH, size / BORDER_WIDTH_RATIO);
         ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, size - ctx.lineWidth, size - ctx.lineWidth);
         
         // Add a magnifying glass icon
@@ -45,7 +51,7 @@ try {
         ctx.beginPath();
         ctx.arc(centerX - size / 8, centerY - size / 8, radius, 0, 2 * Math.PI);
         ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = Math.max(2, size / 16);
+        ctx.lineWidth = Math.max(MIN_STROKE_WIDTH, size / STROKE_WIDTH_RATIO);
         ctx.stroke();
         
         // Draw handle
@@ -53,7 +59,7 @@ try {
         ctx.moveTo(centerX + size / 8, centerY + size / 8);
         ctx.lineTo(centerX + size / 4, centerY + size / 4);
         ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = Math.max(2, size / 16);
+        ctx.lineWidth = Math.max(MIN_STROKE_WIDTH, size / STROKE_WIDTH_RATIO);
         ctx.stroke();
         
         // Save the icon
@@ -65,25 +71,10 @@ try {
     
     console.log('\n✨ All icons generated successfully!');
 } catch (error) {
-    console.log('\n⚠️  Canvas module not available, creating placeholder icons...');
-    
-    // Create simple SVG-based placeholder icons if canvas is not available
-    const sizes = [16, 32, 48, 128];
-    
-    sizes.forEach(size => {
-        // Create a simple SVG icon
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" fill="#1a1a1a"/>
-  <rect x="1" y="1" width="${size - 2}" height="${size - 2}" fill="none" stroke="#ffd700" stroke-width="2"/>
-  <circle cx="${size / 2 - size / 8}" cy="${size / 2 - size / 8}" r="${size / 4}" fill="none" stroke="#ffd700" stroke-width="2"/>
-  <line x1="${size / 2 + size / 8}" y1="${size / 2 + size / 8}" x2="${size / 2 + size / 4}" y2="${size / 2 + size / 4}" stroke="#ffd700" stroke-width="2"/>
-</svg>`;
-        
-        const filename = path.join(iconsDir, `icon${size}.svg`);
-        fs.writeFileSync(filename, svg);
-        console.log(`✓ Generated icon${size}.svg (placeholder)`);
-    });
-    
-    console.log('\n⚠️  SVG placeholders created. For best results, install canvas:');
-    console.log('   npm install canvas');
+    console.error('\n❌ Canvas module not available!');
+    console.error('   Chrome extensions require PNG icons, not SVG.');
+    console.error('   Please install the canvas module to generate icons:');
+    console.error('   npm install canvas');
+    console.error('\n   Error details:', error.message);
+    process.exit(1);
 }
