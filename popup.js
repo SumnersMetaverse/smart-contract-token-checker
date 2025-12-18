@@ -6,9 +6,11 @@
 class TokenInspectorApp {
     constructor() {
         this.inspector = new ERC20Inspector();
+        this.verificationManager = new ContractVerificationManager();
         this.recentContracts = [];
         this.maxRecentContracts = 10;
         this.currentNetwork = 'ethereum';
+        this.currentValidationResult = null;
         this.networkConfigs = {
             ethereum: {
                 name: 'Ethereum',
@@ -99,6 +101,21 @@ class TokenInspectorApp {
         this.tokenTransfersCount = document.getElementById('tokenTransfersCount');
         this.topHolders = document.getElementById('topHolders');
         this.holdersList = document.getElementById('holdersList');
+        
+        // Validation elements
+        this.validationSection = document.getElementById('validationSection');
+        this.validateContractBtn = document.getElementById('validateContractBtn');
+        this.viewValidatedBtn = document.getElementById('viewValidatedBtn');
+        this.validationStatsBtn = document.getElementById('validationStatsBtn');
+        this.validationStatus = document.getElementById('validationStatus');
+        this.validationStatusBadge = document.getElementById('validationStatusBadge');
+        this.validationDetails = document.getElementById('validationDetails');
+        this.validatedContractsSection = document.getElementById('validatedContractsSection');
+        this.validatedContractsList = document.getElementById('validatedContractsList');
+        this.closeValidatedBtn = document.getElementById('closeValidatedBtn');
+        this.validationStatsSection = document.getElementById('validationStatsSection');
+        this.statsGrid = document.getElementById('statsGrid');
+        this.closeStatsBtn = document.getElementById('closeStatsBtn');
     }
 
     /**
@@ -142,6 +159,13 @@ class TokenInspectorApp {
         
         // Open popup in new tab
         this.openPopupInNewTab.addEventListener('click', () => this.openPopupInNewTabHandler());
+        
+        // Validation buttons
+        this.validateContractBtn.addEventListener('click', () => this.handleValidateContract());
+        this.viewValidatedBtn.addEventListener('click', () => this.showValidatedContracts());
+        this.validationStatsBtn.addEventListener('click', () => this.showValidationStats());
+        this.closeValidatedBtn.addEventListener('click', () => this.hideValidatedContracts());
+        this.closeStatsBtn.addEventListener('click', () => this.hideValidationStats());
     }
 
     /**
@@ -187,6 +211,9 @@ class TokenInspectorApp {
                 this.displayTokenInfo(tokenInfo);
                 this.addToRecentContracts(tokenInfo.address);
                 this.updateRecentSection();
+                
+                // Show validation section after successful inspection
+                this.validationSection.style.display = 'block';
             } else {
                 this.showError(tokenInfo.error || 'Failed to inspect token');
             }
@@ -760,6 +787,269 @@ class TokenInspectorApp {
                 element.setAttribute('data-tooltip', element.textContent);
             }
         });
+    }
+
+    /**
+     * Handle validate contract button click
+     */
+    async handleValidateContract() {
+        const address = this.contractInput.value.trim();
+        
+        if (!address) {
+            this.showError('Please enter a contract address to validate');
+            return;
+        }
+        
+        if (!this.verificationManager.validator.validateAddressFormat(address)) {
+            this.showError('Invalid contract address format');
+            return;
+        }
+        
+        try {
+            this.setLoading(true);
+            this.hideError();
+            
+            // Show validation section
+            this.validationSection.style.display = 'block';
+            this.validationStatus.style.display = 'block';
+            this.validationStatusBadge.textContent = 'Validating...';
+            this.validationStatusBadge.className = 'status-badge validating';
+            
+            // Initiate verification
+            const result = await this.verificationManager.initiateVerification(address, this.currentNetwork);
+            
+            this.currentValidationResult = result;
+            
+            if (result.success) {
+                this.displayValidationResult(result);
+                this.showSuccess(`Contract validated and stored with identifier: ${result.identifier}`);
+            } else {
+                this.validationStatusBadge.textContent = 'Failed';
+                this.validationStatusBadge.className = 'status-badge failed';
+                this.validationDetails.innerHTML = `<div class="error-text">${result.message}</div>`;
+                this.showError(result.message || 'Validation failed');
+            }
+        } catch (error) {
+            console.error('Validation error:', error);
+            this.validationStatusBadge.textContent = 'Error';
+            this.validationStatusBadge.className = 'status-badge failed';
+            this.showError('Validation failed: ' + error.message);
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    /**
+     * Display validation result
+     * @param {Object} result - Validation result
+     */
+    displayValidationResult(result) {
+        const validation = result.validationResult;
+        
+        // Update status badge
+        if (validation.isValid) {
+            this.validationStatusBadge.textContent = '✓ Verified';
+            this.validationStatusBadge.className = 'status-badge verified';
+        } else {
+            this.validationStatusBadge.textContent = '✗ Invalid';
+            this.validationStatusBadge.className = 'status-badge invalid';
+        }
+        
+        // Build details HTML
+        let detailsHTML = '<div class="validation-details-content">';
+        
+        // Identifier
+        detailsHTML += `<div class="detail-item">
+            <strong>Identifier:</strong> <code>${result.identifier}</code>
+        </div>`;
+        
+        // Status
+        detailsHTML += `<div class="detail-item">
+            <strong>Status:</strong> <span class="status-${validation.status}">${validation.status}</span>
+        </div>`;
+        
+        // Network
+        detailsHTML += `<div class="detail-item">
+            <strong>Network:</strong> ${validation.network}
+        </div>`;
+        
+        // Validated at
+        detailsHTML += `<div class="detail-item">
+            <strong>Validated:</strong> ${new Date(validation.validatedAt).toLocaleString()}
+        </div>`;
+        
+        // Errors
+        if (validation.errors && validation.errors.length > 0) {
+            detailsHTML += '<div class="detail-item errors">';
+            detailsHTML += '<strong>Errors:</strong><ul>';
+            validation.errors.forEach(error => {
+                detailsHTML += `<li class="error-text">${error}</li>`;
+            });
+            detailsHTML += '</ul></div>';
+        }
+        
+        // Warnings
+        if (validation.warnings && validation.warnings.length > 0) {
+            detailsHTML += '<div class="detail-item warnings">';
+            detailsHTML += '<strong>Warnings:</strong><ul>';
+            validation.warnings.forEach(warning => {
+                detailsHTML += `<li class="warning-text">${warning}</li>`;
+            });
+            detailsHTML += '</ul></div>';
+        }
+        
+        // Compliance details
+        if (validation.complianceDetails) {
+            detailsHTML += '<div class="detail-item compliance">';
+            detailsHTML += '<strong>ERC20 Compliance:</strong><ul>';
+            const cd = validation.complianceDetails;
+            detailsHTML += `<li>Name: ${cd.hasName ? '✓' : '✗'} ${cd.name || '-'}</li>`;
+            detailsHTML += `<li>Symbol: ${cd.hasSymbol ? '✓' : '✗'} ${cd.symbol || '-'}</li>`;
+            detailsHTML += `<li>Decimals: ${cd.hasDecimals ? '✓' : '✗'} ${cd.decimals || '-'}</li>`;
+            detailsHTML += `<li>Total Supply: ${cd.hasTotalSupply ? '✓' : '✗'} ${cd.totalSupply || '-'}</li>`;
+            detailsHTML += '</ul></div>';
+        }
+        
+        detailsHTML += '</div>';
+        
+        this.validationDetails.innerHTML = detailsHTML;
+    }
+
+    /**
+     * Show validated contracts list
+     */
+    async showValidatedContracts() {
+        try {
+            const stored = await this.verificationManager.getValidatedContracts();
+            
+            this.validatedContractsSection.style.display = 'block';
+            this.validationStatsSection.style.display = 'none';
+            
+            if (stored.contracts.length === 0) {
+                this.validatedContractsList.innerHTML = '<div class="empty-state">No validated contracts yet</div>';
+                return;
+            }
+            
+            let html = '<div class="contracts-list">';
+            
+            stored.contracts.forEach(contract => {
+                const statusClass = contract.status.toLowerCase();
+                const statusIcon = contract.isValid ? '✓' : '✗';
+                
+                html += `<div class="contract-item ${statusClass}">
+                    <div class="contract-header">
+                        <span class="contract-status-icon">${statusIcon}</span>
+                        <strong>${contract.address}</strong>
+                    </div>
+                    <div class="contract-details">
+                        <div class="contract-detail">
+                            <span class="label">Network:</span> ${contract.network}
+                        </div>
+                        <div class="contract-detail">
+                            <span class="label">Status:</span> 
+                            <span class="status-${statusClass}">${contract.status}</span>
+                        </div>
+                        <div class="contract-detail">
+                            <span class="label">Identifier:</span> 
+                            <code class="identifier">${contract.identifier}</code>
+                        </div>
+                        <div class="contract-detail">
+                            <span class="label">Validated:</span> ${new Date(contract.validatedAt).toLocaleString()}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            html += '</div>';
+            
+            this.validatedContractsList.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to show validated contracts:', error);
+            this.showError('Failed to load validated contracts');
+        }
+    }
+
+    /**
+     * Hide validated contracts list
+     */
+    hideValidatedContracts() {
+        this.validatedContractsSection.style.display = 'none';
+    }
+
+    /**
+     * Show validation statistics
+     */
+    async showValidationStats() {
+        try {
+            const stats = await this.verificationManager.getValidationStats();
+            
+            this.validationStatsSection.style.display = 'block';
+            this.validatedContractsSection.style.display = 'none';
+            
+            let html = '<div class="stats-container">';
+            
+            // Overall stats
+            html += '<div class="stat-card">';
+            html += '<div class="stat-label">Total Validated</div>';
+            html += `<div class="stat-value">${stats.total}</div>`;
+            html += '</div>';
+            
+            html += '<div class="stat-card verified">';
+            html += '<div class="stat-label">Verified</div>';
+            html += `<div class="stat-value">${stats.verified}</div>`;
+            html += '</div>';
+            
+            html += '<div class="stat-card pending">';
+            html += '<div class="stat-label">Pending</div>';
+            html += `<div class="stat-value">${stats.pending}</div>`;
+            html += '</div>';
+            
+            html += '<div class="stat-card failed">';
+            html += '<div class="stat-label">Failed</div>';
+            html += `<div class="stat-value">${stats.failed}</div>`;
+            html += '</div>';
+            
+            html += '<div class="stat-card invalid">';
+            html += '<div class="stat-label">Invalid</div>';
+            html += `<div class="stat-value">${stats.invalid}</div>`;
+            html += '</div>';
+            
+            // Network breakdown
+            if (Object.keys(stats.byNetwork).length > 0) {
+                html += '<div class="stat-card full-width">';
+                html += '<div class="stat-label">By Network</div>';
+                html += '<div class="network-stats">';
+                for (const [network, count] of Object.entries(stats.byNetwork)) {
+                    html += `<div class="network-stat">
+                        <span class="network-name">${network}:</span>
+                        <span class="network-count">${count}</span>
+                    </div>`;
+                }
+                html += '</div></div>';
+            }
+            
+            // Last updated
+            if (stats.lastUpdated) {
+                html += '<div class="stat-card full-width last-updated">';
+                html += '<div class="stat-label">Last Updated</div>';
+                html += `<div class="stat-value small">${new Date(stats.lastUpdated).toLocaleString()}</div>`;
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            this.statsGrid.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to show validation stats:', error);
+            this.showError('Failed to load validation statistics');
+        }
+    }
+
+    /**
+     * Hide validation statistics
+     */
+    hideValidationStats() {
+        this.validationStatsSection.style.display = 'none';
     }
 }
 
