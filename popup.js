@@ -753,6 +753,17 @@ class TokenInspectorApp {
     }
 
     /**
+     * Escape HTML to prevent XSS
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped HTML
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
      * Toggle dark mode
      */
     toggleDarkMode() {
@@ -877,22 +888,22 @@ class TokenInspectorApp {
         
         // Identifier
         detailsHTML += `<div class="detail-item">
-            <strong>Identifier:</strong> <code>${result.identifier}</code>
+            <strong>Identifier:</strong> <code>${this.escapeHtml(result.identifier)}</code>
         </div>`;
         
         // Status
         detailsHTML += `<div class="detail-item">
-            <strong>Status:</strong> <span class="status-${validation.status}">${validation.status}</span>
+            <strong>Status:</strong> <span class="status-${validation.status}">${this.escapeHtml(validation.status)}</span>
         </div>`;
         
         // Network
         detailsHTML += `<div class="detail-item">
-            <strong>Network:</strong> ${validation.network}
+            <strong>Network:</strong> ${this.escapeHtml(validation.network)}
         </div>`;
         
         // Validated at
         detailsHTML += `<div class="detail-item">
-            <strong>Validated:</strong> ${new Date(validation.validatedAt).toLocaleString()}
+            <strong>Validated:</strong> ${this.escapeHtml(new Date(validation.validatedAt).toLocaleString())}
         </div>`;
         
         // Errors
@@ -900,7 +911,7 @@ class TokenInspectorApp {
             detailsHTML += '<div class="detail-item errors">';
             detailsHTML += '<strong>Errors:</strong><ul>';
             validation.errors.forEach(error => {
-                detailsHTML += `<li class="error-text">${error}</li>`;
+                detailsHTML += `<li class="error-text">${this.escapeHtml(error)}</li>`;
             });
             detailsHTML += '</ul></div>';
         }
@@ -910,7 +921,7 @@ class TokenInspectorApp {
             detailsHTML += '<div class="detail-item warnings">';
             detailsHTML += '<strong>Warnings:</strong><ul>';
             validation.warnings.forEach(warning => {
-                detailsHTML += `<li class="warning-text">${warning}</li>`;
+                detailsHTML += `<li class="warning-text">${this.escapeHtml(warning)}</li>`;
             });
             detailsHTML += '</ul></div>';
         }
@@ -920,10 +931,10 @@ class TokenInspectorApp {
             detailsHTML += '<div class="detail-item compliance">';
             detailsHTML += '<strong>ERC20 Compliance:</strong><ul>';
             const cd = validation.complianceDetails;
-            detailsHTML += `<li>Name: ${cd.hasName ? '✓' : '✗'} ${cd.name || '-'}</li>`;
-            detailsHTML += `<li>Symbol: ${cd.hasSymbol ? '✓' : '✗'} ${cd.symbol || '-'}</li>`;
-            detailsHTML += `<li>Decimals: ${cd.hasDecimals ? '✓' : '✗'} ${cd.decimals || '-'}</li>`;
-            detailsHTML += `<li>Total Supply: ${cd.hasTotalSupply ? '✓' : '✗'} ${cd.totalSupply || '-'}</li>`;
+            detailsHTML += `<li>Name: ${cd.hasName ? '✓' : '✗'} ${this.escapeHtml(cd.name || '-')}</li>`;
+            detailsHTML += `<li>Symbol: ${cd.hasSymbol ? '✓' : '✗'} ${this.escapeHtml(cd.symbol || '-')}</li>`;
+            detailsHTML += `<li>Decimals: ${cd.hasDecimals ? '✓' : '✗'} ${this.escapeHtml(cd.decimals || '-')}</li>`;
+            detailsHTML += `<li>Total Supply: ${cd.hasTotalSupply ? '✓' : '✗'} ${this.escapeHtml(cd.totalSupply || '-')}</li>`;
             detailsHTML += '</ul></div>';
         }
         
@@ -956,22 +967,22 @@ class TokenInspectorApp {
                 html += `<div class="contract-item ${statusClass}">
                     <div class="contract-header">
                         <span class="contract-status-icon">${statusIcon}</span>
-                        <strong>${contract.address}</strong>
+                        <strong>${this.escapeHtml(contract.address)}</strong>
                     </div>
                     <div class="contract-details">
                         <div class="contract-detail">
-                            <span class="label">Network:</span> ${contract.network}
+                            <span class="label">Network:</span> ${this.escapeHtml(contract.network)}
                         </div>
                         <div class="contract-detail">
                             <span class="label">Status:</span> 
-                            <span class="status-${statusClass}">${contract.status}</span>
+                            <span class="status-${statusClass}">${this.escapeHtml(contract.status)}</span>
                         </div>
                         <div class="contract-detail">
                             <span class="label">Identifier:</span> 
-                            <code class="identifier">${contract.identifier}</code>
+                            <code class="identifier">${this.escapeHtml(contract.identifier)}</code>
                         </div>
                         <div class="contract-detail">
-                            <span class="label">Validated:</span> ${new Date(contract.validatedAt).toLocaleString()}
+                            <span class="label">Validated:</span> ${this.escapeHtml(new Date(contract.validatedAt).toLocaleString())}
                         </div>
                     </div>
                 </div>`;
@@ -1186,16 +1197,16 @@ class TokenInspectorApp {
             html += `<div class="result-header">`;
             html += `<span class="result-icon">${statusIcon}</span>`;
             html += `<strong>#${index + 1}</strong>`;
-            html += `<code>${detail.validationResult?.address || detail.address}</code>`;
+            html += `<code>${this.escapeHtml(detail.validationResult?.address || detail.address)}</code>`;
             html += `</div>`;
             
             if (detail.success) {
                 html += `<div class="result-details">`;
-                html += `<span class="label">Identifier:</span> <code>${detail.identifier}</code>`;
+                html += `<span class="label">Identifier:</span> <code>${this.escapeHtml(detail.identifier)}</code>`;
                 html += `</div>`;
             } else {
                 html += `<div class="result-details error">`;
-                html += `<span class="label">Error:</span> ${detail.error || detail.message}`;
+                html += `<span class="label">Error:</span> ${this.escapeHtml(detail.error || detail.message)}`;
                 html += `</div>`;
             }
             
