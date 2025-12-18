@@ -1076,6 +1076,12 @@ class TokenInspectorApp {
             return;
         }
         
+        // Check for self-transfer
+        if (this.wallet.isConnected() && recipient.toLowerCase() === this.wallet.getAccount().toLowerCase()) {
+            this.showSendError('Cannot send tokens to your own address');
+            return;
+        }
+        
         if (!amount || parseFloat(amount) <= 0) {
             this.showSendError('Invalid amount');
             return;
@@ -1218,10 +1224,40 @@ class TokenInspectorApp {
      * Clear transaction history
      */
     async clearTransactionHistory() {
-        if (confirm('Are you sure you want to clear all transaction history?')) {
+        // Create a custom confirmation dialog
+        const confirmDialog = document.createElement('div');
+        confirmDialog.className = 'modal show';
+        confirmDialog.style.display = 'flex';
+        confirmDialog.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h3>Confirm Clear History</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to clear all transaction history? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelClearHistory">Cancel</button>
+                    <button class="btn-primary" id="confirmClearHistory">Clear History</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(confirmDialog);
+        
+        // Handle cancel
+        const cancelBtn = confirmDialog.querySelector('#cancelClearHistory');
+        cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(confirmDialog);
+        });
+        
+        // Handle confirm
+        const confirmBtn = confirmDialog.querySelector('#confirmClearHistory');
+        confirmBtn.addEventListener('click', () => {
             this.transactionManager.clearTransactions();
+            document.body.removeChild(confirmDialog);
             this.closeTransactionHistory();
-        }
+        });
     }
 }
 
