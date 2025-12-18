@@ -9,6 +9,9 @@ class TokenInspectorApp {
         this.recentContracts = [];
         this.maxRecentContracts = 10;
         this.currentNetwork = 'ethereum';
+        this.debugMode = false;
+        this.operationLog = [];
+        this.networkActivity = [];
         this.networkConfigs = {
             ethereum: {
                 name: 'Ethereum',
@@ -34,6 +37,8 @@ class TokenInspectorApp {
         this.bindEvents();
         this.loadRecentContracts();
         this.updateRecentSection();
+        this.loadDebugMode();
+        this.logOperation('Application initialized', 'info');
     }
 
     /**
@@ -50,6 +55,12 @@ class TokenInspectorApp {
         this.recentList = document.getElementById('recentList');
         this.darkModeToggle = document.getElementById('darkModeToggle');
         this.openPopupInNewTab = document.getElementById('openPopupInNewTab');
+        
+        // Debug mode elements
+        this.debugModeToggle = document.getElementById('debugModeToggle');
+        this.debugPanel = document.getElementById('debugPanel');
+        this.clearLogsBtn = document.getElementById('clearLogsBtn');
+        this.exportLogsBtn = document.getElementById('exportLogsBtn');
         
         // Token header elements
         this.tokenIcon = document.getElementById('tokenIcon');
@@ -122,6 +133,7 @@ class TokenInspectorApp {
         this.networkSelect.addEventListener('change', (e) => {
             this.currentNetwork = e.target.value;
             this.updateNetworkConfig();
+            this.logOperation(`Network changed to ${this.currentNetwork}`, 'info');
         });
         
         // Action buttons
@@ -142,6 +154,50 @@ class TokenInspectorApp {
         
         // Open popup in new tab
         this.openPopupInNewTab.addEventListener('click', () => this.openPopupInNewTabHandler());
+        
+        // Debug mode toggle
+        if (this.debugModeToggle) {
+            this.debugModeToggle.addEventListener('click', () => this.toggleDebugMode());
+        }
+        
+        // Clear logs button
+        if (this.clearLogsBtn) {
+            this.clearLogsBtn.addEventListener('click', () => this.clearLogs());
+        }
+        
+        // Export logs button
+        if (this.exportLogsBtn) {
+            this.exportLogsBtn.addEventListener('click', () => this.exportLogs());
+        }
+        
+        // Debug tabs
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('debug-tab')) {
+                this.switchDebugTab(e.target.dataset.tab);
+            }
+        });
+    }
+
+    /**
+     * Switch debug panel tabs
+     * @param {string} tabName - Tab name to switch to
+     */
+    switchDebugTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.debug-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.tab === tabName) {
+                tab.classList.add('active');
+            }
+        });
+        
+        // Update tab content
+        document.querySelectorAll('.debug-tab-content').forEach(content => {
+            content.classList.remove('active');
+            if (content.id === `${tabName}-tab`) {
+                content.classList.add('active');
+            }
+        });
     }
 
     /**
@@ -168,14 +224,17 @@ class TokenInspectorApp {
         
         if (!address) {
             this.showError('Please enter a contract address');
+            this.logOperation('Inspection failed: No address provided', 'warning');
             return;
         }
         
         if (!this.inspector.isValidAddress(address)) {
             this.showError('Invalid contract address format');
+            this.logOperation(`Inspection failed: Invalid address format - ${address}`, 'warning');
             return;
         }
         
+        this.logOperation(`Starting token inspection for ${address} on ${this.currentNetwork}`, 'info');
         this.setLoading(true);
         this.hideError();
         this.hideResults();
@@ -187,12 +246,19 @@ class TokenInspectorApp {
                 this.displayTokenInfo(tokenInfo);
                 this.addToRecentContracts(tokenInfo.address);
                 this.updateRecentSection();
+                this.logOperation(`Token inspection successful: ${tokenInfo.name} (${tokenInfo.symbol})`, 'success', {
+                    address: tokenInfo.address,
+                    name: tokenInfo.name,
+                    symbol: tokenInfo.symbol
+                });
             } else {
                 this.showError(tokenInfo.error || 'Failed to inspect token');
+                this.logOperation(`Token inspection failed: ${tokenInfo.error}`, 'error');
             }
         } catch (error) {
             console.error('Inspection error:', error);
             this.showError('Network error. Please try again.');
+            this.logOperation(`Inspection error: ${error.message}`, 'error', { error: error.toString() });
         } finally {
             this.setLoading(false);
         }
@@ -760,6 +826,190 @@ class TokenInspectorApp {
                 element.setAttribute('data-tooltip', element.textContent);
             }
         });
+    }
+
+    /**
+     * Log operation for debugging and transparency
+     * @param {string} message - Operation message
+     * @param {string} type - Log type (info, success, warning, error)
+     * @param {Object} data - Additional data
+     */
+    logOperation(message, type = 'info', data = null) {
+        const timestamp = new Date().toISOString();
+        const logEntry = {
+            timestamp,
+            message,
+            type,
+            data,
+            network: this.currentNetwork
+        };
+        
+        this.operationLog.push(logEntry);
+        
+        // Keep only last 100 entries
+        if (this.operationLog.length > 100) {
+            this.operationLog.shift();
+        }
+        
+        // Always log to console for transparency
+        const consoleMethod = type === 'error' ? 'error' : type === 'warning' ? 'warn' : 'log';
+        console[consoleMethod](`[${timestamp}] [${type.toUpperCase()}] ${message}`, data || '');
+        
+        // Update debug panel if visible
+        if (this.debugMode) {
+            this.updateDebugPanel();
+        }
+    }
+
+    /**
+     * Log network activity
+     * @param {string} provider - RPC provider
+     * @param {string} method - RPC method
+     * @param {string} status - Request status
+     * @param {Object} data - Additional data
+     */
+    logNetworkActivity(provider, method, status, data = null) {
+        const timestamp = new Date().toISOString();
+        const activityEntry = {
+            timestamp,
+            provider,
+            method,
+            status,
+            data,
+            network: this.currentNetwork
+        };
+        
+        this.networkActivity.push(activityEntry);
+        
+        // Keep only last 50 entries
+        if (this.networkActivity.length > 50) {
+            this.networkActivity.shift();
+        }
+        
+        this.logOperation(`Network: ${method} via ${provider} - ${status}`, 
+                         status === 'success' ? 'success' : 'warning', data);
+    }
+
+    /**
+     * Toggle debug mode
+     */
+    toggleDebugMode() {
+        this.debugMode = !this.debugMode;
+        chrome.storage.local.set({ debugMode: this.debugMode });
+        
+        const debugPanel = document.getElementById('debugPanel');
+        const debugToggle = document.getElementById('debugModeToggle');
+        
+        if (this.debugMode) {
+            debugPanel.style.display = 'block';
+            debugToggle.classList.add('active');
+            debugToggle.textContent = '🐛 Debug: ON';
+            this.logOperation('Debug mode enabled', 'info');
+            this.updateDebugPanel();
+        } else {
+            debugPanel.style.display = 'none';
+            debugToggle.classList.remove('active');
+            debugToggle.textContent = '🐛 Debug: OFF';
+            this.logOperation('Debug mode disabled', 'info');
+        }
+    }
+
+    /**
+     * Load debug mode setting
+     */
+    async loadDebugMode() {
+        try {
+            const result = await chrome.storage.local.get(['debugMode']);
+            this.debugMode = result.debugMode || false;
+            
+            const debugPanel = document.getElementById('debugPanel');
+            const debugToggle = document.getElementById('debugModeToggle');
+            
+            if (debugPanel && debugToggle) {
+                if (this.debugMode) {
+                    debugPanel.style.display = 'block';
+                    debugToggle.classList.add('active');
+                    debugToggle.textContent = '🐛 Debug: ON';
+                } else {
+                    debugPanel.style.display = 'none';
+                    debugToggle.textContent = '🐛 Debug: OFF';
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load debug mode:', error);
+        }
+    }
+
+    /**
+     * Update debug panel with current logs
+     */
+    updateDebugPanel() {
+        const operationLogElement = document.getElementById('operationLog');
+        const networkLogElement = document.getElementById('networkLog');
+        const debugNetworkInfo = document.getElementById('debugNetworkInfo');
+        
+        if (!operationLogElement || !networkLogElement) {
+            return;
+        }
+        
+        // Update network info
+        if (debugNetworkInfo) {
+            const config = this.networkConfigs[this.currentNetwork];
+            debugNetworkInfo.textContent = `${config.name} (Chain ID: ${config.chainId})`;
+        }
+        
+        // Update operation log
+        const operationLogHTML = this.operationLog.slice(-20).reverse().map(entry => `
+            <div class="log-entry log-${entry.type}">
+                <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
+                <span class="log-message">${entry.message}</span>
+                ${entry.data ? `<span class="log-data">${JSON.stringify(entry.data)}</span>` : ''}
+            </div>
+        `).join('');
+        operationLogElement.innerHTML = operationLogHTML || '<div class="log-empty">No operations yet</div>';
+        
+        // Update network log
+        const networkLogHTML = this.networkActivity.slice(-20).reverse().map(entry => `
+            <div class="log-entry log-${entry.status}">
+                <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
+                <span class="log-provider">${entry.provider}</span>
+                <span class="log-method">${entry.method}</span>
+                <span class="log-status">${entry.status}</span>
+            </div>
+        `).join('');
+        networkLogElement.innerHTML = networkLogHTML || '<div class="log-empty">No network activity yet</div>';
+    }
+
+    /**
+     * Clear logs
+     */
+    clearLogs() {
+        this.operationLog = [];
+        this.networkActivity = [];
+        this.updateDebugPanel();
+        this.logOperation('Logs cleared', 'info');
+    }
+
+    /**
+     * Export logs
+     */
+    exportLogs() {
+        const logs = {
+            operationLog: this.operationLog,
+            networkActivity: this.networkActivity,
+            exportedAt: new Date().toISOString(),
+            network: this.currentNetwork
+        };
+        
+        const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `token-inspector-logs-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        this.logOperation('Logs exported', 'success');
     }
 }
 
