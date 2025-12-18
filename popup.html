@@ -18,6 +18,9 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button class="header-btn debug-toggle-btn" id="debugModeToggle" title="Toggle Debug Mode">
+                    🐛 Debug: OFF
+                </button>
                 <button class="header-btn" id="openPopupInNewTab" title="Open in New Tab">
                     🆕
                 </button>
@@ -183,6 +186,51 @@
         <div class="recent-section" id="recentSection" style="display: none;">
             <h3>Recent Contracts</h3>
             <div class="recent-list" id="recentList"></div>
+        </div>
+
+        <!-- Debug Panel -->
+        <div class="debug-panel" id="debugPanel" style="display: none;">
+            <div class="debug-header">
+                <h3>🐛 Debug & Operations Monitor</h3>
+                <div class="debug-actions">
+                    <button class="debug-btn" id="clearLogsBtn" title="Clear Logs">🗑️ Clear</button>
+                    <button class="debug-btn" id="exportLogsBtn" title="Export Logs">💾 Export</button>
+                </div>
+            </div>
+            
+            <div class="debug-tabs">
+                <button class="debug-tab active" data-tab="operations">Operations</button>
+                <button class="debug-tab" data-tab="network">Network Activity</button>
+            </div>
+            
+            <div class="debug-content">
+                <div class="debug-tab-content active" id="operations-tab">
+                    <div class="log-container" id="operationLog">
+                        <div class="log-empty">No operations yet</div>
+                    </div>
+                </div>
+                
+                <div class="debug-tab-content" id="network-tab">
+                    <div class="log-container" id="networkLog">
+                        <div class="log-empty">No network activity yet</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="debug-info">
+                <div class="debug-info-item">
+                    <label>Current Network:</label>
+                    <span id="debugNetworkInfo">-</span>
+                </div>
+                <div class="debug-info-item">
+                    <label>Console Logging:</label>
+                    <span class="status-enabled">✓ Always On</span>
+                </div>
+                <div class="debug-info-item">
+                    <label>Operation Visibility:</label>
+                    <span class="status-enabled">✓ Fully Transparent</span>
+                </div>
+            </div>
         </div>
 
         <footer class="footer">
