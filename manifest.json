@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
   "name": "🔍 Smart Contract Token Checker – ERC20 Inspector",
-  "version": "3.0.0",
-  "description": "Advanced multi-chain token inspector with comprehensive analysis. Support for Ethereum, Polygon, BSC with market data, holders analysis, and contract details. Beautiful dark UI with golden accents.",
+  "version": "3.1.0",
+  "description": "Advanced multi-chain token inspector with wallet integration. Send tokens, track transactions, view market data, and analyze contracts on Ethereum, Polygon, and BSC. Beautiful dark UI with MetaMask support.",
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+    "tabs",
+    "activeTab"
   ],
   "host_permissions": [
     "https://cloudflare-eth.com/*",

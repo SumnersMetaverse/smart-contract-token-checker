@@ -5,10 +5,13 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
 ## ✨ Features
 
 - **🌐 Multi-Chain Support**: Ethereum, Polygon, BSC (Binance Smart Chain)
+- **🔗 Wallet Integration**: Connect MetaMask to interact with tokens
+- **💸 Send Tokens**: Send ERC20 tokens directly from the extension
 - **📊 Complete Token Analysis**: Name, symbol, decimals, total supply, and more
 - **💰 Market Information**: Real-time price, market cap, and 24h change
 - **👥 Holders Analysis**: Holders count, transfers count, and top 5 holders
 - **🔗 Contract Details**: Owner, deployed block, verification status
+- **📜 Transaction History**: Track your token transfers with full history
 - **🎨 Modern UI**: Beautiful dark theme with golden accents
 - **⚡ Fast & Reliable**: Multiple RPC providers with automatic failover
 - **🔒 Privacy-First**: 100% client-side, no data collection
@@ -30,6 +33,8 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
 
 ## 📖 How to Use
 
+### Inspecting Tokens
+
 1. **Select Network**: Choose from Ethereum, Polygon, or BSC
 2. **Enter Contract Address**: Input the token contract address (0x...)
 3. **Click "Check Token"**: Retrieve comprehensive token information
@@ -40,6 +45,25 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
    - **Contract Info**: Owner, deployed block, verification status
    - **Holders Data**: Holders count, transfers count, top 5 holders
 5. **Quick Actions**: Copy address, open in explorer
+
+### Sending Tokens (New!)
+
+1. **Connect Wallet**: Click the "Connect" button in the header
+2. **Select a Token**: Inspect the token you want to send
+3. **Click Send Button**: Click the 💸 icon in the token details
+4. **Enter Details**:
+   - Recipient address
+   - Amount to send (or click MAX for full balance)
+5. **Review Fee**: Check the estimated transaction fee
+6. **Confirm**: Click "Send Tokens" and approve in MetaMask
+7. **Track Status**: View transaction status in the extension
+
+### Transaction History
+
+- View all your token transfers
+- Check transaction status (pending, success, failed)
+- Click on transaction hash to view on block explorer
+- Clear history when needed
 
 ## 🔧 Supported Networks
 
@@ -104,6 +128,12 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
 - `tokenURI()` - Token metadata URI
 - `baseURI()` - Base URI for metadata
 
+### Token Transfer Functions (New!)
+- `transfer(address, uint256)` - Transfer tokens
+- `approve(address, uint256)` - Approve spending
+- `transferFrom(address, address, uint256)` - Transfer from approved address
+- `allowance(address, address)` - Check allowance
+
 ### Alternative Function Names
 The extension tries multiple function selectors to ensure compatibility:
 - **Name**: `name()`, `tokenName()`, `NAME()`, `_name()`
@@ -114,8 +144,11 @@ The extension tries multiple function selectors to ensure compatibility:
 - **100% Client-Side**: All operations performed in your browser
 - **No Data Collection**: No personal information is stored or transmitted
 - **No API Keys**: Uses only public RPC endpoints
-- **Local Storage**: Recent contracts stored locally on your device
+- **Local Storage**: Recent contracts and transaction history stored locally on your device
 - **Secure**: No external servers or tracking
+- **Wallet Security**: Never stores private keys or sensitive wallet information
+- **Transaction Safety**: All transactions require explicit user confirmation via MetaMask
+- **Address Validation**: All addresses validated before transactions
 
 ## 🚀 Performance
 
@@ -149,7 +182,9 @@ smart-contract-token-checker/
 ├── background.js      # Background script
 ├── manifest.json      # Extension manifest
 ├── lib/
-│   └── rpc.js         # RPC communication
+│   ├── rpc.js         # RPC communication
+│   ├── wallet.js      # Wallet integration (NEW)
+│   └── contracts.js   # Contract interactions (NEW)
 └── icons/             # Extension icons
 ```
 
@@ -159,6 +194,17 @@ smart-contract-token-checker/
 3. Load as unpacked extension in Chrome
 
 ## 📝 Version History
+
+### [3.1.0] - Wallet Integration & Token Sending
+- **Added**: MetaMask wallet connection support
+- **Added**: Send ERC20 tokens directly from the extension
+- **Added**: Transaction history tracking and management
+- **Added**: Real-time balance checking for connected wallet
+- **Added**: Gas estimation for token transfers
+- **Added**: Transaction status monitoring
+- **Enhanced**: UI with wallet connection status indicator
+- **Enhanced**: Security with address and amount validation
+- **Improved**: User experience with modal dialogs for sending tokens
 
 ### [3.0.0] - Complete Redesign
 - **Added**: Multi-chain support (Ethereum, Polygon, BSC)
