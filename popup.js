@@ -901,8 +901,17 @@ class TokenInspectorApp {
             this.networkActivity.shift();
         }
         
-        this.logOperation(`Network: ${method} via ${provider} - ${status}`, 
-                         status === 'success' ? 'success' : 'warning', data);
+        // Map status to appropriate log type
+        let logType = 'info';
+        if (status === 'success') {
+            logType = 'success';
+        } else if (status === 'failed' || status === 'error') {
+            logType = 'error';
+        } else if (status === 'reverted') {
+            logType = 'warning';
+        }
+        
+        this.logOperation(`Network: ${method} via ${provider} - ${status}`, logType, data);
     }
 
     /**
@@ -956,6 +965,18 @@ class TokenInspectorApp {
     }
 
     /**
+     * Sanitize HTML to prevent XSS
+     * @param {string} str - String to sanitize
+     * @returns {string} Sanitized string
+     */
+    sanitizeHTML(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    /**
      * Update debug panel with current logs
      */
     updateDebugPanel() {
@@ -973,25 +994,34 @@ class TokenInspectorApp {
             debugNetworkInfo.textContent = `${config.name} (Chain ID: ${config.chainId})`;
         }
         
-        // Update operation log
-        const operationLogHTML = this.operationLog.slice(-20).reverse().map(entry => `
-            <div class="log-entry log-${entry.type}">
-                <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
-                <span class="log-message">${entry.message}</span>
-                ${entry.data ? `<span class="log-data">${JSON.stringify(entry.data)}</span>` : ''}
-            </div>
-        `).join('');
+        // Update operation log with sanitization
+        const operationLogHTML = this.operationLog.slice(-20).reverse().map(entry => {
+            const sanitizedMessage = this.sanitizeHTML(entry.message);
+            const sanitizedData = entry.data ? this.sanitizeHTML(JSON.stringify(entry.data)) : '';
+            return `
+                <div class="log-entry log-${this.sanitizeHTML(entry.type)}">
+                    <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
+                    <span class="log-message">${sanitizedMessage}</span>
+                    ${entry.data ? `<span class="log-data">${sanitizedData}</span>` : ''}
+                </div>
+            `;
+        }).join('');
         operationLogElement.innerHTML = operationLogHTML || '<div class="log-empty">No operations yet</div>';
         
-        // Update network log
-        const networkLogHTML = this.networkActivity.slice(-20).reverse().map(entry => `
-            <div class="log-entry log-${entry.status}">
-                <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
-                <span class="log-provider">${entry.provider}</span>
-                <span class="log-method">${entry.method}</span>
-                <span class="log-status">${entry.status}</span>
-            </div>
-        `).join('');
+        // Update network log with sanitization
+        const networkLogHTML = this.networkActivity.slice(-20).reverse().map(entry => {
+            const sanitizedProvider = this.sanitizeHTML(entry.provider);
+            const sanitizedMethod = this.sanitizeHTML(entry.method);
+            const sanitizedStatus = this.sanitizeHTML(entry.status);
+            return `
+                <div class="log-entry log-${sanitizedStatus}">
+                    <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
+                    <span class="log-provider">${sanitizedProvider}</span>
+                    <span class="log-method">${sanitizedMethod}</span>
+                    <span class="log-status">${sanitizedStatus}</span>
+                </div>
+            `;
+        }).join('');
         networkLogElement.innerHTML = networkLogHTML || '<div class="log-empty">No network activity yet</div>';
     }
 
