@@ -2,6 +2,35 @@
 
 All notable changes to the Advanced Token Inspector extension will be documented in this file.
 
+## [3.1.0] - 2024-12-XX
+
+### Added - Transparency & Debug Features
+- **Debug Mode Toggle**: Enable/disable comprehensive logging and monitoring
+- **Operation Logging Panel**: Real-time tracking of all user actions and system operations
+- **Network Activity Monitor**: View all RPC calls, providers, and request statuses
+- **Log Export Functionality**: Download complete operation and network logs as JSON
+- **Console Transparency**: All operations automatically logged to browser console
+- **Activity Callback System**: RPC library now reports all network activity
+- **Debug Tabs**: Separate views for operations and network activity
+- **Network Info Display**: Current network and chain ID visibility
+- **Provider Transparency**: See which RPC providers are being used and when failover occurs
+- **Status Indicators**: Visual indicators for enabled features and system status
+
+### Enhanced
+- **Full Transparency**: No hidden or silent operations - everything is visible
+- **User Control**: Users can enable/disable debug features as needed
+- **Troubleshooting**: Better ability to diagnose issues with detailed logs
+- **Audit Trail**: Complete history of operations for accountability
+- **Network Visibility**: Real-time monitoring of all backend communications
+
+### Technical Improvements
+- **RPC Activity Logging**: Added callback mechanism to EthereumRPC class
+- **Operation History**: Circular buffer for last 100 operations
+- **Network History**: Circular buffer for last 50 network activities
+- **Persistent Preferences**: Debug mode preference saved to local storage
+- **Tab-based Interface**: Organized debug information in tabbed panels
+- **Responsive Debug UI**: Mobile-friendly debug panel design
+
 ## [3.0.0] - 2024-01-XX
 
 ### Added

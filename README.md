@@ -13,6 +13,9 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
 - **⚡ Fast & Reliable**: Multiple RPC providers with automatic failover
 - **🔒 Privacy-First**: 100% client-side, no data collection
 - **🌍 Explorer Integration**: Direct links to Etherscan, Polygonscan, BSCScan
+- **🐛 Debug Mode**: Full transparency with operation and network activity logging
+- **📝 Operation Logs**: Track all user actions and system operations
+- **🌐 Network Monitoring**: Real-time visibility into RPC calls and provider status
 
 ## 🚀 Installation
 
@@ -40,6 +43,48 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
    - **Contract Info**: Owner, deployed block, verification status
    - **Holders Data**: Holders count, transfers count, top 5 holders
 5. **Quick Actions**: Copy address, open in explorer
+
+## 🐛 Debug & Transparency Features
+
+### Enabling Debug Mode
+Click the **🐛 Debug** button in the header to toggle the debug panel. When enabled, you get:
+
+- **Operation Logs**: View all user actions and system operations with timestamps
+- **Network Activity**: Monitor all RPC calls, provider selections, and request statuses
+- **Real-time Updates**: See operations as they happen
+- **Export Functionality**: Download logs as JSON for analysis or reporting
+
+### What's Visible
+The extension is designed for **full transparency**:
+
+1. **All Console Logging**: Every operation is logged to browser console automatically
+2. **Network Requests**: All RPC calls and API requests are visible
+3. **Provider Failover**: See which RPC providers are being used and when failover occurs
+4. **Operation Status**: Track success, errors, and warnings for every action
+5. **No Hidden Operations**: Everything the extension does is visible and logged
+
+### Debug Panel Tabs
+
+#### Operations Tab
+Shows all application operations including:
+- User interactions (button clicks, input changes)
+- Token inspection requests
+- Data processing steps
+- Success/error messages
+
+#### Network Activity Tab
+Shows all network operations including:
+- RPC method calls
+- Provider URLs
+- Request status (pending, success, failed, reverted)
+- Automatic provider switching
+
+### Exporting Logs
+Click the **💾 Export** button in the debug panel to download:
+- Complete operation history
+- Network activity records
+- Timestamps and status for all events
+- Current network configuration
 
 ## 🔧 Supported Networks
 
@@ -116,6 +161,33 @@ The extension tries multiple function selectors to ensure compatibility:
 - **No API Keys**: Uses only public RPC endpoints
 - **Local Storage**: Recent contracts stored locally on your device
 - **Secure**: No external servers or tracking
+- **Full Transparency**: All operations logged and visible to users
+
+## 🔍 Transparency & Visibility
+
+### Console Logging
+All operations are automatically logged to the browser console for full transparency:
+- User actions and interactions
+- Network requests and responses
+- RPC provider selection and failover
+- Token data processing
+- Error messages and warnings
+
+### Debug Mode Benefits
+Enable debug mode to access:
+1. **Real-time Operation Tracking**: See what the extension is doing as it happens
+2. **Network Monitoring**: Track all RPC calls and their results
+3. **Troubleshooting**: Identify issues quickly with detailed logs
+4. **Audit Trail**: Export complete operation history for record-keeping
+5. **Provider Transparency**: See exactly which RPC providers are being used
+
+### No Hidden Operations
+The extension is designed with transparency in mind:
+- ✓ All network requests are visible
+- ✓ All data processing is logged
+- ✓ All errors are reported clearly
+- ✓ All provider switches are logged
+- ✓ No silent or hidden operations
 
 ## 🚀 Performance
 
@@ -159,6 +231,16 @@ smart-contract-token-checker/
 3. Load as unpacked extension in Chrome
 
 ## 📝 Version History
+
+### [3.1.0] - Transparency & Debug Features
+- **Added**: Debug mode with operation logging panel
+- **Added**: Real-time network activity monitoring
+- **Added**: Operation history tracking and export
+- **Added**: Full transparency for all RPC calls
+- **Added**: Console logging for all operations
+- **Enhanced**: Network request visibility
+- **Enhanced**: Provider failover transparency
+- **Improved**: User visibility into backend operations
 
 ### [3.0.0] - Complete Redesign
 - **Added**: Multi-chain support (Ethereum, Polygon, BSC)
