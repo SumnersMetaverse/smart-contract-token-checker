@@ -6,6 +6,10 @@
 class TokenInspectorApp {
     constructor() {
         this.inspector = new ERC20Inspector();
+        this.wallet = new WalletConnector();
+        this.transactionManager = new TransactionManager();
+        this.currentTokenContract = null;
+        this.currentTokenInfo = null;
         this.recentContracts = [];
         this.maxRecentContracts = 10;
         this.currentNetwork = 'ethereum';
@@ -34,6 +38,8 @@ class TokenInspectorApp {
         this.bindEvents();
         this.loadRecentContracts();
         this.updateRecentSection();
+        this.initializeWallet();
+        this.transactionManager.loadFromStorage();
     }
 
     /**
@@ -99,6 +105,31 @@ class TokenInspectorApp {
         this.tokenTransfersCount = document.getElementById('tokenTransfersCount');
         this.topHolders = document.getElementById('topHolders');
         this.holdersList = document.getElementById('holdersList');
+        
+        // Wallet elements
+        this.walletConnectBtn = document.getElementById('walletConnectBtn');
+        this.sendTokenBtn = document.getElementById('sendTokenBtn');
+        
+        // Send token modal elements
+        this.sendTokenModal = document.getElementById('sendTokenModal');
+        this.closeSendModal = document.getElementById('closeSendModal');
+        this.sendTokenSymbol = document.getElementById('sendTokenSymbol');
+        this.sendTokenAddress = document.getElementById('sendTokenAddress');
+        this.sendTokenBalance = document.getElementById('sendTokenBalance');
+        this.recipientAddress = document.getElementById('recipientAddress');
+        this.sendAmount = document.getElementById('sendAmount');
+        this.maxAmountBtn = document.getElementById('maxAmountBtn');
+        this.estimatedFee = document.getElementById('estimatedFee');
+        this.sendErrorMessage = document.getElementById('sendErrorMessage');
+        this.cancelSendBtn = document.getElementById('cancelSendBtn');
+        this.confirmSendBtn = document.getElementById('confirmSendBtn');
+        
+        // Transaction history modal elements
+        this.transactionHistoryModal = document.getElementById('transactionHistoryModal');
+        this.closeHistoryModal = document.getElementById('closeHistoryModal');
+        this.transactionList = document.getElementById('transactionList');
+        this.clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        this.closeHistoryBtn = document.getElementById('closeHistoryBtn');
     }
 
     /**
@@ -142,6 +173,33 @@ class TokenInspectorApp {
         
         // Open popup in new tab
         this.openPopupInNewTab.addEventListener('click', () => this.openPopupInNewTabHandler());
+        
+        // Wallet connect button
+        this.walletConnectBtn.addEventListener('click', () => this.handleWalletConnect());
+        
+        // Send token button
+        this.sendTokenBtn.addEventListener('click', () => this.openSendTokenModal());
+        
+        // Send token modal
+        this.closeSendModal.addEventListener('click', () => this.closeSendTokenModal());
+        this.cancelSendBtn.addEventListener('click', () => this.closeSendTokenModal());
+        this.confirmSendBtn.addEventListener('click', () => this.handleSendToken());
+        this.maxAmountBtn.addEventListener('click', () => this.setMaxAmount());
+        
+        // Validate recipient address
+        this.recipientAddress.addEventListener('input', () => this.validateRecipientAddress());
+        this.sendAmount.addEventListener('input', () => this.validateSendAmount());
+        
+        // Transaction history modal
+        if (this.closeHistoryModal) {
+            this.closeHistoryModal.addEventListener('click', () => this.closeTransactionHistory());
+        }
+        if (this.closeHistoryBtn) {
+            this.closeHistoryBtn.addEventListener('click', () => this.closeTransactionHistory());
+        }
+        if (this.clearHistoryBtn) {
+            this.clearHistoryBtn.addEventListener('click', () => this.clearTransactionHistory());
+        }
     }
 
     /**
@@ -294,6 +352,14 @@ class TokenInspectorApp {
      */
     displayTokenInfo(tokenInfo) {
         const config = this.networkConfigs[this.currentNetwork];
+        
+        // Store current token info
+        this.currentTokenInfo = tokenInfo;
+        
+        // Show send button if wallet is connected
+        if (this.wallet.isConnected()) {
+            this.sendTokenBtn.style.display = 'block';
+        }
         
         // Update header with logo
         this.updateTokenLogo(tokenInfo.logo);
@@ -760,6 +826,402 @@ class TokenInspectorApp {
                 element.setAttribute('data-tooltip', element.textContent);
             }
         });
+    }
+    
+    /**
+     * Initialize wallet connection
+     */
+    async initializeWallet() {
+        // Set up wallet event listeners
+        this.wallet.onAccountsChanged = (accounts) => {
+            if (accounts.length === 0) {
+                this.updateWalletUI(false);
+            } else {
+                this.updateWalletUI(true, accounts[0]);
+            }
+        };
+        
+        this.wallet.onChainChanged = (chainId) => {
+            console.log('Chain changed to:', chainId);
+            // Update network selector if needed
+            this.updateNetworkFromChainId(chainId);
+        };
+        
+        this.wallet.onDisconnect = () => {
+            this.updateWalletUI(false);
+        };
+    }
+    
+    /**
+     * Handle wallet connect button click
+     */
+    async handleWalletConnect() {
+        if (this.wallet.isConnected()) {
+            // Disconnect wallet
+            this.wallet.disconnect();
+            this.updateWalletUI(false);
+            return;
+        }
+        
+        try {
+            const result = await this.wallet.connect();
+            if (result.success) {
+                this.updateWalletUI(true, result.account);
+                
+                // Switch to correct network if needed
+                const config = this.networkConfigs[this.currentNetwork];
+                if (result.chainId !== config.chainId) {
+                    await this.wallet.switchNetwork(config.chainId);
+                }
+            }
+        } catch (error) {
+            console.error('Wallet connection failed:', error);
+            this.showError(error.message);
+        }
+    }
+    
+    /**
+     * Update wallet UI based on connection status
+     */
+    updateWalletUI(connected, account = null) {
+        const walletStatus = this.walletConnectBtn.querySelector('.wallet-status');
+        
+        if (connected && account) {
+            this.walletConnectBtn.classList.add('connected');
+            walletStatus.textContent = `🔗 ${this.formatAddress(account)}`;
+            
+            // Show send token button if token is displayed
+            if (this.currentTokenInfo) {
+                this.sendTokenBtn.style.display = 'block';
+            }
+        } else {
+            this.walletConnectBtn.classList.remove('connected');
+            walletStatus.textContent = '🔌 Connect';
+            this.sendTokenBtn.style.display = 'none';
+        }
+    }
+    
+    /**
+     * Update network selector from chain ID
+     */
+    updateNetworkFromChainId(chainId) {
+        const networkMap = {
+            1: 'ethereum',
+            137: 'polygon',
+            56: 'bsc'
+        };
+        
+        const network = networkMap[chainId];
+        if (network && network !== this.currentNetwork) {
+            this.currentNetwork = network;
+            this.networkSelect.value = network;
+            this.updateNetworkConfig();
+        }
+    }
+    
+    /**
+     * Open send token modal
+     */
+    async openSendTokenModal() {
+        if (!this.wallet.isConnected()) {
+            this.showError('Please connect your wallet first');
+            return;
+        }
+        
+        if (!this.currentTokenInfo) {
+            this.showError('No token selected');
+            return;
+        }
+        
+        // Initialize token contract
+        this.currentTokenContract = new TokenContract(
+            this.currentTokenInfo.address,
+            this.wallet
+        );
+        
+        // Update modal with token info
+        this.sendTokenSymbol.textContent = this.currentTokenInfo.symbol;
+        this.sendTokenAddress.textContent = this.formatAddress(this.currentTokenInfo.address);
+        
+        // Get user's token balance
+        try {
+            const balance = await this.currentTokenContract.balanceOf(this.wallet.getAccount());
+            const formattedBalance = this.currentTokenContract.fromTokenAmount(
+                balance,
+                parseInt(this.currentTokenInfo.decimals)
+            );
+            this.sendTokenBalance.textContent = `${formattedBalance} ${this.currentTokenInfo.symbol}`;
+        } catch (error) {
+            console.error('Failed to get balance:', error);
+            this.sendTokenBalance.textContent = 'Error loading balance';
+        }
+        
+        // Reset form
+        this.recipientAddress.value = '';
+        this.sendAmount.value = '';
+        this.estimatedFee.textContent = 'Estimating...';
+        this.sendErrorMessage.style.display = 'none';
+        
+        // Show modal
+        this.sendTokenModal.classList.add('show');
+        this.sendTokenModal.style.display = 'flex';
+    }
+    
+    /**
+     * Close send token modal
+     */
+    closeSendTokenModal() {
+        this.sendTokenModal.classList.remove('show');
+        this.sendTokenModal.style.display = 'none';
+    }
+    
+    /**
+     * Set max amount
+     */
+    async setMaxAmount() {
+        if (!this.currentTokenContract || !this.wallet.isConnected()) {
+            return;
+        }
+        
+        try {
+            const balance = await this.currentTokenContract.balanceOf(this.wallet.getAccount());
+            const formattedBalance = this.currentTokenContract.fromTokenAmount(
+                balance,
+                parseInt(this.currentTokenInfo.decimals)
+            );
+            this.sendAmount.value = formattedBalance;
+            this.validateSendAmount();
+        } catch (error) {
+            console.error('Failed to get balance:', error);
+        }
+    }
+    
+    /**
+     * Validate recipient address
+     */
+    validateRecipientAddress() {
+        const address = this.recipientAddress.value.trim();
+        
+        this.recipientAddress.classList.remove('error', 'success');
+        
+        if (address && !this.inspector.isValidAddress(address)) {
+            this.recipientAddress.classList.add('error');
+        } else if (address && this.inspector.isValidAddress(address)) {
+            this.recipientAddress.classList.add('success');
+        }
+    }
+    
+    /**
+     * Validate send amount
+     */
+    validateSendAmount() {
+        const amount = this.sendAmount.value.trim();
+        
+        this.sendAmount.classList.remove('error', 'success');
+        
+        if (amount) {
+            try {
+                const parsed = parseFloat(amount);
+                if (parsed > 0) {
+                    this.sendAmount.classList.add('success');
+                    this.estimateTransactionFee();
+                } else {
+                    this.sendAmount.classList.add('error');
+                }
+            } catch (error) {
+                this.sendAmount.classList.add('error');
+            }
+        }
+    }
+    
+    /**
+     * Estimate transaction fee
+     */
+    async estimateTransactionFee() {
+        if (!this.currentTokenContract || !this.wallet.isConnected()) {
+            return;
+        }
+        
+        const recipient = this.recipientAddress.value.trim();
+        const amount = this.sendAmount.value.trim();
+        
+        if (!recipient || !amount || !this.inspector.isValidAddress(recipient)) {
+            return;
+        }
+        
+        try {
+            const tokenAmount = this.currentTokenContract.toTokenAmount(
+                amount,
+                parseInt(this.currentTokenInfo.decimals)
+            );
+            
+            const txDetails = await this.currentTokenContract.prepareTransfer(recipient, tokenAmount);
+            this.estimatedFee.textContent = `~${txDetails.transactionFee} ETH`;
+        } catch (error) {
+            console.error('Failed to estimate fee:', error);
+            this.estimatedFee.textContent = 'Failed to estimate';
+        }
+    }
+    
+    /**
+     * Handle send token
+     */
+    async handleSendToken() {
+        const recipient = this.recipientAddress.value.trim();
+        const amount = this.sendAmount.value.trim();
+        
+        // Validate inputs
+        if (!recipient || !this.inspector.isValidAddress(recipient)) {
+            this.showSendError('Invalid recipient address');
+            return;
+        }
+        
+        if (!amount || parseFloat(amount) <= 0) {
+            this.showSendError('Invalid amount');
+            return;
+        }
+        
+        // Disable send button
+        this.confirmSendBtn.disabled = true;
+        this.confirmSendBtn.textContent = 'Sending...';
+        
+        try {
+            const tokenAmount = this.currentTokenContract.toTokenAmount(
+                amount,
+                parseInt(this.currentTokenInfo.decimals)
+            );
+            
+            const txHash = await this.currentTokenContract.transfer(recipient, tokenAmount);
+            
+            // Add transaction to history
+            this.transactionManager.addTransaction({
+                hash: txHash,
+                from: this.wallet.getAccount(),
+                to: recipient,
+                amount: amount,
+                type: 'transfer',
+                tokenAddress: this.currentTokenInfo.address,
+                tokenSymbol: this.currentTokenInfo.symbol
+            });
+            
+            // Close modal
+            this.closeSendTokenModal();
+            
+            // Show success message
+            this.showSuccess(`Transaction sent! Hash: ${txHash.slice(0, 10)}...`);
+            
+            // Wait for confirmation in background
+            this.waitForTransactionConfirmation(txHash);
+        } catch (error) {
+            console.error('Transaction failed:', error);
+            this.showSendError(error.message || 'Transaction failed');
+        } finally {
+            this.confirmSendBtn.disabled = false;
+            this.confirmSendBtn.textContent = 'Send Tokens';
+        }
+    }
+    
+    /**
+     * Wait for transaction confirmation
+     */
+    async waitForTransactionConfirmation(txHash) {
+        try {
+            const receipt = await this.wallet.waitForTransaction(txHash);
+            
+            if (receipt.status === '0x1') {
+                this.transactionManager.updateTransactionStatus(txHash, 'success');
+                console.log('Transaction confirmed:', txHash);
+            } else {
+                this.transactionManager.updateTransactionStatus(txHash, 'failed');
+                console.error('Transaction failed:', txHash);
+            }
+        } catch (error) {
+            console.error('Failed to wait for transaction:', error);
+            this.transactionManager.updateTransactionStatus(txHash, 'failed');
+        }
+    }
+    
+    /**
+     * Show send error
+     */
+    showSendError(message) {
+        this.sendErrorMessage.querySelector('.error-text').textContent = message;
+        this.sendErrorMessage.style.display = 'block';
+    }
+    
+    /**
+     * Open transaction history
+     */
+    openTransactionHistory() {
+        const transactions = this.transactionManager.getAllTransactions();
+        
+        if (transactions.length === 0) {
+            this.transactionList.innerHTML = '<p class="no-transactions">No transactions yet</p>';
+        } else {
+            this.transactionList.innerHTML = '';
+            
+            transactions.forEach(tx => {
+                const txItem = document.createElement('div');
+                txItem.className = 'transaction-item';
+                
+                const timestamp = new Date(tx.timestamp).toLocaleString();
+                
+                txItem.innerHTML = `
+                    <div class="transaction-header">
+                        <span class="transaction-type">${tx.type}</span>
+                        <span class="transaction-status ${tx.status}">${tx.status}</span>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-detail">
+                            <span>Amount:</span>
+                            <strong>${tx.amount} ${tx.tokenSymbol}</strong>
+                        </div>
+                        <div class="transaction-detail">
+                            <span>To:</span>
+                            <strong>${this.formatAddress(tx.to)}</strong>
+                        </div>
+                        <div class="transaction-detail">
+                            <span>Time:</span>
+                            <strong>${timestamp}</strong>
+                        </div>
+                        <div class="transaction-hash" title="Click to view on explorer">
+                            ${tx.hash}
+                        </div>
+                    </div>
+                `;
+                
+                // Add click handler to open in explorer
+                const hashElement = txItem.querySelector('.transaction-hash');
+                hashElement.addEventListener('click', () => {
+                    const config = this.networkConfigs[this.currentNetwork];
+                    const url = `${config.explorerUrl}/tx/${tx.hash}`;
+                    chrome.tabs.create({ url });
+                });
+                
+                this.transactionList.appendChild(txItem);
+            });
+        }
+        
+        this.transactionHistoryModal.classList.add('show');
+        this.transactionHistoryModal.style.display = 'flex';
+    }
+    
+    /**
+     * Close transaction history
+     */
+    closeTransactionHistory() {
+        this.transactionHistoryModal.classList.remove('show');
+        this.transactionHistoryModal.style.display = 'none';
+    }
+    
+    /**
+     * Clear transaction history
+     */
+    async clearTransactionHistory() {
+        if (confirm('Are you sure you want to clear all transaction history?')) {
+            this.transactionManager.clearTransactions();
+            this.closeTransactionHistory();
+        }
     }
 }
 

@@ -5,7 +5,9 @@
   "description": "Advanced multi-chain token inspector with comprehensive analysis. Support for Ethereum, Polygon, BSC with market data, holders analysis, and contract details. Beautiful dark UI with golden accents.",
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+    "tabs",
+    "activeTab"
   ],
   "host_permissions": [
     "https://cloudflare-eth.com/*",

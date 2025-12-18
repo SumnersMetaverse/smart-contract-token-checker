@@ -18,6 +18,9 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button class="header-btn wallet-btn" id="walletConnectBtn" title="Connect Wallet">
+                    <span class="wallet-status">🔌 Connect</span>
+                </button>
                 <button class="header-btn" id="openPopupInNewTab" title="Open in New Tab">
                     🆕
                 </button>
@@ -72,6 +75,9 @@
                     <div class="token-price" id="tokenPrice">-</div>
                 </div>
                 <div class="token-actions">
+                    <button class="action-btn" id="sendTokenBtn" title="Send Token" style="display: none;">
+                        💸
+                    </button>
                     <button class="action-btn" id="etherscanBtn" title="View on Explorer">
                         🔗
                     </button>
@@ -185,6 +191,70 @@
             <div class="recent-list" id="recentList"></div>
         </div>
 
+        <!-- Send Token Modal -->
+        <div class="modal" id="sendTokenModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Send Tokens</h3>
+                    <button class="modal-close" id="closeSendModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="send-form">
+                        <div class="form-group">
+                            <label>Token:</label>
+                            <div class="token-info-display">
+                                <span id="sendTokenSymbol">-</span>
+                                <span id="sendTokenAddress" class="small-text">-</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Your Balance:</label>
+                            <span id="sendTokenBalance">-</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipientAddress">Recipient Address:</label>
+                            <input type="text" id="recipientAddress" placeholder="0x..." maxlength="42">
+                        </div>
+                        <div class="form-group">
+                            <label for="sendAmount">Amount:</label>
+                            <input type="text" id="sendAmount" placeholder="0.0">
+                            <button class="max-btn" id="maxAmountBtn">MAX</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Transaction Fee:</label>
+                            <span id="estimatedFee">Estimating...</span>
+                        </div>
+                        <div class="error-message" id="sendErrorMessage" style="display: none;">
+                            <div class="error-text"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelSendBtn">Cancel</button>
+                    <button class="btn-primary" id="confirmSendBtn">Send Tokens</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History Modal -->
+        <div class="modal" id="transactionHistoryModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Transaction History</h3>
+                    <button class="modal-close" id="closeHistoryModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="transaction-list" id="transactionList">
+                        <p class="no-transactions">No transactions yet</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="clearHistoryBtn">Clear History</button>
+                    <button class="btn-primary" id="closeHistoryBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
         <footer class="footer">
             <div class="author-info">
                 <span>by <a href="https://mohammadnasser.com" target="_blank">Nasser Hashemabadi</a></span>
@@ -197,6 +267,8 @@
     </div>
 
     <script src="lib/rpc.js"></script>
+    <script src="lib/wallet.js"></script>
+    <script src="lib/contracts.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

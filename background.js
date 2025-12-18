@@ -57,6 +57,50 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
             return true; // Keep message channel open for async response
             
+        case 'saveTransaction':
+            // Save transaction to storage
+            chrome.storage.local.get(['transactions'], (result) => {
+                const transactions = result.transactions || [];
+                transactions.unshift(request.transaction);
+                
+                // Limit to 100 transactions
+                const limitedTransactions = transactions.slice(0, 100);
+                
+                chrome.storage.local.set({ transactions: limitedTransactions }, () => {
+                    sendResponse({ success: true });
+                });
+            });
+            return true; // Keep message channel open for async response
+            
+        case 'getTransactions':
+            chrome.storage.local.get(['transactions'], (result) => {
+                sendResponse({ transactions: result.transactions || [] });
+            });
+            return true; // Keep message channel open for async response
+            
+        case 'updateTransactionStatus':
+            // Update transaction status
+            chrome.storage.local.get(['transactions'], (result) => {
+                const transactions = result.transactions || [];
+                const tx = transactions.find(t => t.hash === request.hash);
+                
+                if (tx) {
+                    tx.status = request.status;
+                    chrome.storage.local.set({ transactions }, () => {
+                        sendResponse({ success: true });
+                    });
+                } else {
+                    sendResponse({ success: false, error: 'Transaction not found' });
+                }
+            });
+            return true; // Keep message channel open for async response
+            
+        case 'clearTransactions':
+            chrome.storage.local.set({ transactions: [] }, () => {
+                sendResponse({ success: true });
+            });
+            return true; // Keep message channel open for async response
+            
         default:
             sendResponse({ error: 'Unknown action' });
     }
