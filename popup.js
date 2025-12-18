@@ -33,6 +33,7 @@ class TokenInspectorApp {
         this.initializeElements();
         this.bindEvents();
         this.loadRecentContracts();
+        this.loadSavedContracts();
         this.updateRecentSection();
     }
 
@@ -40,8 +41,38 @@ class TokenInspectorApp {
      * Initialize DOM elements
      */
     initializeElements() {
+        // Mode tabs
+        this.singleModeTab = document.getElementById('singleModeTab');
+        this.batchModeTab = document.getElementById('batchModeTab');
+        this.myContractsTab = document.getElementById('myContractsTab');
+        
+        // Mode sections
+        this.singleModeSection = document.getElementById('singleModeSection');
+        this.batchModeSection = document.getElementById('batchModeSection');
+        this.myContractsSection = document.getElementById('myContractsSection');
+        
+        // Single mode elements
         this.contractInput = document.getElementById('contractInput');
         this.inspectBtn = document.getElementById('inspectBtn');
+        
+        // Batch mode elements
+        this.batchContractInput = document.getElementById('batchContractInput');
+        this.batchInspectBtn = document.getElementById('batchInspectBtn');
+        this.clearBatchBtn = document.getElementById('clearBatchBtn');
+        this.batchResultsSection = document.getElementById('batchResultsSection');
+        this.batchResultsStats = document.getElementById('batchResultsStats');
+        this.batchResultsBody = document.getElementById('batchResultsBody');
+        this.exportResultsBtn = document.getElementById('exportResultsBtn');
+        this.clearResultsBtn = document.getElementById('clearResultsBtn');
+        
+        // My contracts elements
+        this.savedContractsList = document.getElementById('savedContractsList');
+        this.newContractInput = document.getElementById('newContractInput');
+        this.newContractLabel = document.getElementById('newContractLabel');
+        this.addContractBtn = document.getElementById('addContractBtn');
+        this.verifyAllSavedBtn = document.getElementById('verifyAllSavedBtn');
+        
+        // Common elements
         this.networkSelect = document.getElementById('networkSelect');
         this.errorMessage = document.getElementById('errorMessage');
         this.successMessage = document.getElementById('successMessage');
@@ -56,6 +87,7 @@ class TokenInspectorApp {
         this.tokenName = document.getElementById('tokenName');
         this.tokenSymbol = document.getElementById('tokenSymbol');
         this.tokenPrice = document.getElementById('tokenPrice');
+        this.saveContractBtn = document.getElementById('saveContractBtn');
         this.etherscanBtn = document.getElementById('etherscanBtn');
         this.copyAddressBtn = document.getElementById('copyAddressBtn');
         this.openNewTabBtn = document.getElementById('openNewTabBtn');
@@ -99,12 +131,23 @@ class TokenInspectorApp {
         this.tokenTransfersCount = document.getElementById('tokenTransfersCount');
         this.topHolders = document.getElementById('topHolders');
         this.holdersList = document.getElementById('holdersList');
+        
+        // Initialize state
+        this.currentMode = 'single';
+        this.savedContracts = [];
+        this.batchResults = [];
+        this.currentTokenInfo = null;
     }
 
     /**
      * Bind event listeners
      */
     bindEvents() {
+        // Mode tabs
+        this.singleModeTab.addEventListener('click', () => this.switchMode('single'));
+        this.batchModeTab.addEventListener('click', () => this.switchMode('batch'));
+        this.myContractsTab.addEventListener('click', () => this.switchMode('myContracts'));
+        
         // Inspect button click
         this.inspectBtn.addEventListener('click', () => this.handleInspect());
         
@@ -125,10 +168,21 @@ class TokenInspectorApp {
         });
         
         // Action buttons
+        this.saveContractBtn.addEventListener('click', () => this.saveCurrentContract());
         this.etherscanBtn.addEventListener('click', () => this.openEtherscan());
         this.copyAddressBtn.addEventListener('click', () => this.copyAddress());
         this.openNewTabBtn.addEventListener('click', () => this.openInNewTab());
         this.openSameTabBtn.addEventListener('click', () => this.openInSameTab());
+        
+        // Batch mode buttons
+        this.batchInspectBtn.addEventListener('click', () => this.handleBatchInspect());
+        this.clearBatchBtn.addEventListener('click', () => this.clearBatchInput());
+        this.exportResultsBtn.addEventListener('click', () => this.exportBatchResults());
+        this.clearResultsBtn.addEventListener('click', () => this.clearBatchResults());
+        
+        // My contracts buttons
+        this.addContractBtn.addEventListener('click', () => this.addNewContract());
+        this.verifyAllSavedBtn.addEventListener('click', () => this.verifyAllSavedContracts());
         
         // Copy buttons
         document.addEventListener('click', (e) => {
@@ -293,6 +347,9 @@ class TokenInspectorApp {
      * @param {Object} tokenInfo - Token information object
      */
     displayTokenInfo(tokenInfo) {
+        // Store current token info for saving
+        this.currentTokenInfo = tokenInfo;
+        
         const config = this.networkConfigs[this.currentNetwork];
         
         // Update header with logo
@@ -761,11 +818,463 @@ class TokenInspectorApp {
             }
         });
     }
+
+    /**
+     * Switch between single, batch, and my contracts modes
+     * @param {string} mode - Mode to switch to ('single', 'batch', 'myContracts')
+     */
+    switchMode(mode) {
+        this.currentMode = mode;
+        
+        // Update tab styles
+        this.singleModeTab.classList.remove('active');
+        this.batchModeTab.classList.remove('active');
+        this.myContractsTab.classList.remove('active');
+        
+        // Hide all sections
+        this.singleModeSection.style.display = 'none';
+        this.batchModeSection.style.display = 'none';
+        this.myContractsSection.style.display = 'none';
+        this.resultsSection.style.display = 'none';
+        this.batchResultsSection.style.display = 'none';
+        
+        // Show selected mode
+        if (mode === 'single') {
+            this.singleModeTab.classList.add('active');
+            this.singleModeSection.style.display = 'block';
+        } else if (mode === 'batch') {
+            this.batchModeTab.classList.add('active');
+            this.batchModeSection.style.display = 'block';
+            if (this.batchResults.length > 0) {
+                this.batchResultsSection.style.display = 'block';
+            }
+        } else if (mode === 'myContracts') {
+            this.myContractsTab.classList.add('active');
+            this.myContractsSection.style.display = 'block';
+            this.updateSavedContractsList();
+        }
+        
+        this.hideError();
+    }
+
+    /**
+     * Handle batch inspection
+     */
+    async handleBatchInspect() {
+        const addresses = this.batchContractInput.value
+            .split('\n')
+            .map(addr => addr.trim())
+            .filter(addr => addr && addr.length > 0);
+        
+        if (addresses.length === 0) {
+            this.showError('Please enter at least one contract address');
+            return;
+        }
+        
+        // Validate addresses
+        const validAddresses = addresses.filter(addr => this.inspector.isValidAddress(addr));
+        const invalidCount = addresses.length - validAddresses.length;
+        
+        if (invalidCount > 0) {
+            this.showError(`${invalidCount} invalid address(es) found. Only valid addresses will be checked.`);
+        }
+        
+        if (validAddresses.length === 0) {
+            this.showError('No valid addresses found');
+            return;
+        }
+        
+        this.setLoadingBatch(true);
+        this.hideError();
+        this.batchResults = [];
+        this.batchResultsSection.style.display = 'block';
+        this.updateBatchResults();
+        
+        // Process each address
+        for (let i = 0; i < validAddresses.length; i++) {
+            const address = validAddresses[i];
+            
+            // Add pending status
+            this.batchResults.push({
+                address,
+                status: 'loading',
+                name: '-',
+                symbol: '-',
+                decimals: '-',
+                totalSupply: '-'
+            });
+            this.updateBatchResults();
+            
+            try {
+                const tokenInfo = await this.inspector.inspectToken(address);
+                
+                // Update result
+                this.batchResults[i] = {
+                    address: tokenInfo.address,
+                    status: tokenInfo.success ? 'success' : 'error',
+                    name: tokenInfo.name || '-',
+                    symbol: tokenInfo.symbol || '-',
+                    decimals: tokenInfo.decimals || '-',
+                    totalSupply: this.inspector.formatSupply(tokenInfo.totalSupply, tokenInfo.decimals),
+                    error: tokenInfo.error,
+                    fullInfo: tokenInfo
+                };
+            } catch (error) {
+                console.error('Batch inspection error for', address, error);
+                this.batchResults[i] = {
+                    address,
+                    status: 'error',
+                    name: '-',
+                    symbol: '-',
+                    decimals: '-',
+                    totalSupply: '-',
+                    error: error.message
+                };
+            }
+            
+            this.updateBatchResults();
+        }
+        
+        this.setLoadingBatch(false);
+        this.showSuccess(`Verified ${validAddresses.length} contract(s)`);
+    }
+
+    /**
+     * Update batch results display
+     */
+    updateBatchResults() {
+        // Update stats
+        const total = this.batchResults.length;
+        const success = this.batchResults.filter(r => r.status === 'success').length;
+        const failed = this.batchResults.filter(r => r.status === 'error').length;
+        const loading = this.batchResults.filter(r => r.status === 'loading').length;
+        
+        this.batchResultsStats.innerHTML = `
+            <div class="batch-stat">
+                <div class="batch-stat-label">Total</div>
+                <div class="batch-stat-value">${total}</div>
+            </div>
+            <div class="batch-stat">
+                <div class="batch-stat-label">Success</div>
+                <div class="batch-stat-value" style="color: var(--success-color);">${success}</div>
+            </div>
+            <div class="batch-stat">
+                <div class="batch-stat-label">Failed</div>
+                <div class="batch-stat-value" style="color: var(--danger-color);">${failed}</div>
+            </div>
+            <div class="batch-stat">
+                <div class="batch-stat-label">Pending</div>
+                <div class="batch-stat-value" style="color: var(--primary-color);">${loading}</div>
+            </div>
+        `;
+        
+        // Update table
+        this.batchResultsBody.innerHTML = '';
+        
+        this.batchResults.forEach((result, index) => {
+            const row = document.createElement('tr');
+            
+            let statusHtml = '';
+            if (result.status === 'success') {
+                statusHtml = '<span class="batch-status success">✓ Valid</span>';
+            } else if (result.status === 'error') {
+                statusHtml = '<span class="batch-status error">✗ Failed</span>';
+            } else {
+                statusHtml = '<span class="batch-status loading">⏳ Loading...</span>';
+            }
+            
+            const config = this.networkConfigs[this.currentNetwork];
+            
+            row.innerHTML = `
+                <td>${statusHtml}</td>
+                <td><span class="batch-contract-address">${this.formatAddress(result.address)}</span></td>
+                <td>${result.name}</td>
+                <td>${result.symbol}</td>
+                <td>${result.decimals}</td>
+                <td>${result.totalSupply}</td>
+                <td class="batch-actions-cell">
+                    <button onclick="window.open('${config.explorerUrl}/token/${result.address}', '_blank')">View</button>
+                    ${result.status === 'success' ? `<button onclick="app.saveContractFromBatch(${index})">Save</button>` : ''}
+                </td>
+            `;
+            
+            this.batchResultsBody.appendChild(row);
+        });
+    }
+
+    /**
+     * Set loading state for batch button
+     * @param {boolean} loading - Loading state
+     */
+    setLoadingBatch(loading) {
+        this.batchInspectBtn.disabled = loading;
+        const btnText = this.batchInspectBtn.querySelector('.btn-text');
+        const spinner = this.batchInspectBtn.querySelector('.loading-spinner');
+        
+        if (loading) {
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+        } else {
+            btnText.style.display = 'block';
+            spinner.style.display = 'none';
+        }
+    }
+
+    /**
+     * Clear batch input
+     */
+    clearBatchInput() {
+        this.batchContractInput.value = '';
+    }
+
+    /**
+     * Clear batch results
+     */
+    clearBatchResults() {
+        this.batchResults = [];
+        this.batchResultsSection.style.display = 'none';
+    }
+
+    /**
+     * Export batch results to CSV
+     */
+    exportBatchResults() {
+        if (this.batchResults.length === 0) {
+            this.showError('No results to export');
+            return;
+        }
+        
+        const headers = ['Status', 'Address', 'Name', 'Symbol', 'Decimals', 'Total Supply', 'Network'];
+        const rows = this.batchResults.map(result => [
+            result.status === 'success' ? 'Valid' : 'Failed',
+            result.address,
+            result.name,
+            result.symbol,
+            result.decimals,
+            result.totalSupply,
+            this.networkConfigs[this.currentNetwork].name
+        ]);
+        
+        const csvContent = [headers, ...rows]
+            .map(row => row.map(cell => `"${cell}"`).join(','))
+            .join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `token-verification-${Date.now()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        this.showSuccess('Results exported successfully');
+    }
+
+    /**
+     * Save current contract to saved contracts
+     */
+    async saveCurrentContract() {
+        if (!this.currentTokenInfo || !this.currentTokenInfo.address) {
+            this.showError('No contract to save');
+            return;
+        }
+        
+        const contract = {
+            address: this.currentTokenInfo.address,
+            label: this.currentTokenInfo.name || 'Unnamed Contract',
+            name: this.currentTokenInfo.name,
+            symbol: this.currentTokenInfo.symbol,
+            network: this.currentNetwork,
+            addedAt: Date.now()
+        };
+        
+        // Check if already exists
+        const exists = this.savedContracts.some(c => c.address.toLowerCase() === contract.address.toLowerCase());
+        if (exists) {
+            this.showError('Contract already saved');
+            return;
+        }
+        
+        this.savedContracts.push(contract);
+        await this.saveSavedContracts();
+        this.showSuccess('Contract saved successfully');
+    }
+
+    /**
+     * Save contract from batch results
+     * @param {number} index - Index in batch results
+     */
+    async saveContractFromBatch(index) {
+        const result = this.batchResults[index];
+        if (!result || result.status !== 'success') return;
+        
+        const contract = {
+            address: result.address,
+            label: result.name || 'Unnamed Contract',
+            name: result.name,
+            symbol: result.symbol,
+            network: this.currentNetwork,
+            addedAt: Date.now()
+        };
+        
+        // Check if already exists
+        const exists = this.savedContracts.some(c => c.address.toLowerCase() === contract.address.toLowerCase());
+        if (exists) {
+            this.showError('Contract already saved');
+            return;
+        }
+        
+        this.savedContracts.push(contract);
+        await this.saveSavedContracts();
+        this.showSuccess('Contract saved successfully');
+    }
+
+    /**
+     * Add new contract to saved contracts
+     */
+    async addNewContract() {
+        const address = this.newContractInput.value.trim();
+        const label = this.newContractLabel.value.trim();
+        
+        if (!address) {
+            this.showError('Please enter a contract address');
+            return;
+        }
+        
+        if (!this.inspector.isValidAddress(address)) {
+            this.showError('Invalid contract address format');
+            return;
+        }
+        
+        // Check if already exists
+        const exists = this.savedContracts.some(c => c.address.toLowerCase() === address.toLowerCase());
+        if (exists) {
+            this.showError('Contract already saved');
+            return;
+        }
+        
+        const contract = {
+            address: address.toLowerCase(),
+            label: label || 'Unnamed Contract',
+            network: this.currentNetwork,
+            addedAt: Date.now()
+        };
+        
+        this.savedContracts.push(contract);
+        await this.saveSavedContracts();
+        this.updateSavedContractsList();
+        
+        this.newContractInput.value = '';
+        this.newContractLabel.value = '';
+        this.showSuccess('Contract added successfully');
+    }
+
+    /**
+     * Remove saved contract
+     * @param {number} index - Index in saved contracts
+     */
+    async removeSavedContract(index) {
+        this.savedContracts.splice(index, 1);
+        await this.saveSavedContracts();
+        this.updateSavedContractsList();
+        this.showSuccess('Contract removed');
+    }
+
+    /**
+     * Verify a single saved contract
+     * @param {number} index - Index in saved contracts
+     */
+    async verifySavedContract(index) {
+        const contract = this.savedContracts[index];
+        if (!contract) return;
+        
+        this.switchMode('single');
+        this.contractInput.value = contract.address;
+        this.currentNetwork = contract.network || 'ethereum';
+        this.networkSelect.value = this.currentNetwork;
+        this.updateNetworkConfig();
+        this.handleInspect();
+    }
+
+    /**
+     * Verify all saved contracts
+     */
+    async verifyAllSavedContracts() {
+        if (this.savedContracts.length === 0) {
+            this.showError('No saved contracts to verify');
+            return;
+        }
+        
+        // Switch to batch mode and populate addresses
+        this.switchMode('batch');
+        const addresses = this.savedContracts.map(c => c.address).join('\n');
+        this.batchContractInput.value = addresses;
+        
+        // Trigger batch inspect
+        await this.handleBatchInspect();
+    }
+
+    /**
+     * Update saved contracts list display
+     */
+    updateSavedContractsList() {
+        if (this.savedContracts.length === 0) {
+            this.savedContractsList.innerHTML = '<p class="empty-message">No saved contracts yet. Check a contract and click "Save" to add it here.</p>';
+            return;
+        }
+        
+        this.savedContractsList.innerHTML = '';
+        
+        this.savedContracts.forEach((contract, index) => {
+            const item = document.createElement('div');
+            item.className = 'saved-contract-item';
+            
+            item.innerHTML = `
+                <div class="saved-contract-info">
+                    <div class="saved-contract-label">${contract.label}</div>
+                    <div class="saved-contract-address">${contract.address}</div>
+                </div>
+                <div class="saved-contract-actions">
+                    <button onclick="app.verifySavedContract(${index})">Verify</button>
+                    <button onclick="app.removeSavedContract(${index})">Remove</button>
+                </div>
+            `;
+            
+            this.savedContractsList.appendChild(item);
+        });
+    }
+
+    /**
+     * Load saved contracts from storage
+     */
+    async loadSavedContracts() {
+        try {
+            const result = await chrome.storage.local.get(['savedContracts']);
+            this.savedContracts = result.savedContracts || [];
+        } catch (error) {
+            console.error('Failed to load saved contracts:', error);
+            this.savedContracts = [];
+        }
+    }
+
+    /**
+     * Save contracts to storage
+     */
+    async saveSavedContracts() {
+        try {
+            await chrome.storage.local.set({
+                savedContracts: this.savedContracts
+            });
+        } catch (error) {
+            console.error('Failed to save contracts:', error);
+        }
+    }
 }
 
 // Initialize app when DOM is loaded
+let app; // Make app globally accessible
 document.addEventListener('DOMContentLoaded', async () => {
-    const app = new TokenInspectorApp();
+    app = new TokenInspectorApp();
     await app.loadTheme();
 });
 
