@@ -852,7 +852,7 @@ class TokenInspectorApp {
             if (mempool.found) {
                 this.mempoolStatus.textContent = '✅ Found';
                 this.mempoolStatus.className = 'status-badge status-verified';
-            } else if (mempool.data && !mempool.data.verifiable) {
+            } else if (!mempool.applicable) {
                 this.mempoolStatus.textContent = '⚠️ Not Applicable';
                 this.mempoolStatus.className = 'status-badge status-partial';
             } else {

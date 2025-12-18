@@ -21,15 +21,15 @@
   },
   "assets": [
     {
-      "name": "Sample Token",
-      "symbol": "SMPL",
-      "address": "0x0000000000000000000000000000000000000000",
+      "name": "Example Token - DO NOT USE",
+      "symbol": "EXAMPLE",
+      "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
       "network": "ethereum",
-      "decimals": 18,
-      "verified": true,
+      "decimals": 6,
+      "verified": false,
       "addedAt": "2024-01-01T00:00:00Z",
-      "tags": ["defi", "sample"],
-      "description": "This is a sample token entry for demonstration purposes"
+      "tags": ["example"],
+      "description": "This is a sample catalog entry using USDT address as an example. Replace with actual verified contracts."
     }
   ],
   "categories": {
