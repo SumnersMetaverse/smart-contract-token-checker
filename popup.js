@@ -33,6 +33,11 @@ class TokenInspectorApp {
             }
         };
         
+        // Set up RPC activity logging callback
+        this.inspector.rpc.setActivityCallback((provider, method, status, data) => {
+            this.logNetworkActivity(provider, method, status, data);
+        });
+        
         this.initializeElements();
         this.bindEvents();
         this.loadRecentContracts();
@@ -273,6 +278,16 @@ class TokenInspectorApp {
         this.inspector.rpc.currentProvider = 0;
         this.inspector.rpc.failedProviders.clear();
         this.inspector.rpc.lastSuccessfulProvider = null;
+        
+        // Re-set the activity callback after network change
+        this.inspector.rpc.setActivityCallback((provider, method, status, data) => {
+            this.logNetworkActivity(provider, method, status, data);
+        });
+        
+        // Update debug info if panel is visible
+        if (this.debugMode) {
+            this.updateDebugPanel();
+        }
     }
 
     /**
