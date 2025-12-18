@@ -9,6 +9,9 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
 - **💰 Market Information**: Real-time price, market cap, and 24h change
 - **👥 Holders Analysis**: Holders count, transfers count, and top 5 holders
 - **🔗 Contract Details**: Owner, deployed block, verification status
+- **📦 Batch Verification**: Check multiple contracts at once
+- **💾 Save Contracts**: Manage and organize your contract addresses
+- **📤 Export Results**: Download batch verification results as CSV
 - **🎨 Modern UI**: Beautiful dark theme with golden accents
 - **⚡ Fast & Reliable**: Multiple RPC providers with automatic failover
 - **🔒 Privacy-First**: 100% client-side, no data collection
@@ -30,6 +33,7 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
 
 ## 📖 How to Use
 
+### Single Contract Verification
 1. **Select Network**: Choose from Ethereum, Polygon, or BSC
 2. **Enter Contract Address**: Input the token contract address (0x...)
 3. **Click "Check Token"**: Retrieve comprehensive token information
@@ -39,7 +43,24 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
    - **Market Data**: Price, market cap, 24h change
    - **Contract Info**: Owner, deployed block, verification status
    - **Holders Data**: Holders count, transfers count, top 5 holders
-5. **Quick Actions**: Copy address, open in explorer
+5. **Save Contract**: Click the save button (💾) to add to your saved contracts
+6. **Quick Actions**: Copy address, open in explorer
+
+### Batch Verification
+1. **Switch to "Batch Check" Tab**: Click on the "Batch Check" tab
+2. **Enter Multiple Addresses**: Input contract addresses, one per line
+3. **Click "Check All Tokens"**: Verify all contracts at once
+4. **View Results Table**: See status, name, symbol, and more for each contract
+5. **Export Results**: Download results as CSV for further analysis
+6. **Save Individual Contracts**: Click "Save" on any successful verification
+
+### My Contracts
+1. **Switch to "My Contracts" Tab**: Click on the "My Contracts" tab
+2. **View Saved Contracts**: See all your saved contract addresses
+3. **Add New Contract**: Enter address and optional label, click "Add Contract"
+4. **Verify Individual**: Click "Verify" on any contract to check it
+5. **Verify All**: Click "Verify All" to batch verify all saved contracts
+6. **Remove Contract**: Click "Remove" to delete a saved contract
 
 ## 🔧 Supported Networks
 
@@ -159,6 +180,16 @@ smart-contract-token-checker/
 3. Load as unpacked extension in Chrome
 
 ## 📝 Version History
+
+### [3.1.0] - Batch Verification & Contract Management
+- **Added**: Batch contract verification - check multiple contracts at once
+- **Added**: "My Contracts" feature - save and manage your contract addresses
+- **Added**: CSV export for batch verification results
+- **Added**: Three-tab interface (Single Check, Batch Check, My Contracts)
+- **Added**: Save button for individual contracts
+- **Added**: Verify All button for saved contracts
+- **Enhanced**: Improved workflow for managing multiple contracts
+- **Improved**: Better organization and accessibility of contract data
 
 ### [3.0.0] - Complete Redesign
 - **Added**: Multi-chain support (Ethereum, Polygon, BSC)

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "🔍 Smart Contract Token Checker – ERC20 Inspector",
-  "version": "3.0.0",
-  "description": "Advanced multi-chain token inspector with comprehensive analysis. Support for Ethereum, Polygon, BSC with market data, holders analysis, and contract details. Beautiful dark UI with golden accents.",
+  "version": "3.1.0",
+  "description": "Advanced multi-chain token inspector with batch verification and contract management. Support for Ethereum, Polygon, BSC with market data, holders analysis, and CSV export.",
   "permissions": [
     "storage",
     "alarms"

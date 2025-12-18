@@ -81,6 +81,13 @@
         </header>
 
         <div class="input-section">
+            <!-- Mode Tabs -->
+            <div class="mode-tabs">
+                <button class="mode-tab active" id="singleModeTab">Single Check</button>
+                <button class="mode-tab" id="batchModeTab">Batch Check</button>
+                <button class="mode-tab" id="myContractsTab">My Contracts</button>
+            </div>
+
             <div class="network-selector">
                 <label for="networkSelect">Network:</label>
                 <select id="networkSelect" class="network-select">
@@ -90,21 +97,73 @@
                 </select>
             </div>
             
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <div class="input-label">Contract Address</div>
+            <!-- Single Mode Section -->
+            <div class="single-mode-section" id="singleModeSection">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <div class="input-label">Contract Address</div>
+                        <input 
+                            type="text" 
+                            id="contractInput" 
+                            placeholder="Enter contract address (0x...)" 
+                            maxlength="42"
+                        >
+                    </div>
+                    <button id="inspectBtn" class="inspect-btn">
+                        <span class="btn-text">Check Token</span>
+                        <div class="loading-spinner" style="display: none;"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Batch Mode Section -->
+            <div class="batch-mode-section" id="batchModeSection" style="display: none;">
+                <div class="batch-input-wrapper">
+                    <div class="input-label">Contract Addresses (one per line)</div>
+                    <textarea 
+                        id="batchContractInput" 
+                        placeholder="Enter multiple contract addresses, one per line:&#10;0x...&#10;0x...&#10;0x..."
+                        rows="6"
+                    ></textarea>
+                    <div class="batch-actions">
+                        <button id="clearBatchBtn" class="secondary-btn">Clear</button>
+                        <button id="batchInspectBtn" class="inspect-btn">
+                            <span class="btn-text">Check All Tokens</span>
+                            <div class="loading-spinner" style="display: none;"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Contracts Section -->
+            <div class="my-contracts-section" id="myContractsSection" style="display: none;">
+                <div class="my-contracts-header">
+                    <h3>Saved Contracts</h3>
+                    <button id="verifyAllSavedBtn" class="inspect-btn">
+                        <span class="btn-text">Verify All</span>
+                        <div class="loading-spinner" style="display: none;"></div>
+                    </button>
+                </div>
+                <div class="saved-contracts-list" id="savedContractsList">
+                    <p class="empty-message">No saved contracts yet. Check a contract and click "Save" to add it here.</p>
+                </div>
+                <div class="add-contract-form">
                     <input 
                         type="text" 
-                        id="contractInput" 
-                        placeholder="Enter contract address (0x...)" 
+                        id="newContractInput" 
+                        placeholder="Add new contract address (0x...)" 
                         maxlength="42"
                     >
+                    <input 
+                        type="text" 
+                        id="newContractLabel" 
+                        placeholder="Label (optional)"
+                        maxlength="50"
+                    >
+                    <button id="addContractBtn" class="secondary-btn">Add Contract</button>
                 </div>
-                <button id="inspectBtn" class="inspect-btn">
-                    <span class="btn-text">Check Token</span>
-                    <div class="loading-spinner" style="display: none;"></div>
-                </button>
             </div>
+
             <div class="error-message" id="errorMessage" style="display: none;">
                 <div class="error-text"></div>
             </div>
@@ -123,6 +182,9 @@
                     <div class="token-price" id="tokenPrice">-</div>
                 </div>
                 <div class="token-actions">
+                    <button class="action-btn" id="saveContractBtn" title="Save Contract">
+                        💾
+                    </button>
                     <button class="action-btn" id="etherscanBtn" title="View on Explorer">
                         🔗
                     </button>
@@ -228,6 +290,34 @@
                     <h4>Top 5 Holders</h4>
                     <div class="holders-list" id="holdersList"></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Batch Results Section -->
+        <div class="batch-results-section" id="batchResultsSection" style="display: none;">
+            <div class="batch-results-header">
+                <h3>Batch Verification Results</h3>
+                <div class="batch-actions-header">
+                    <button id="exportResultsBtn" class="secondary-btn">Export CSV</button>
+                    <button id="clearResultsBtn" class="secondary-btn">Clear</button>
+                </div>
+            </div>
+            <div class="batch-results-stats" id="batchResultsStats"></div>
+            <div class="batch-results-table-wrapper">
+                <table class="batch-results-table" id="batchResultsTable">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Contract Address</th>
+                            <th>Name</th>
+                            <th>Symbol</th>
+                            <th>Decimals</th>
+                            <th>Total Supply</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchResultsBody"></tbody>
+                </table>
             </div>
         </div>
 
