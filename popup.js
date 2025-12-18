@@ -6,6 +6,7 @@
 class TokenInspectorApp {
     constructor() {
         this.inspector = new ERC20Inspector();
+        this.verifier = new AssetVerification();
         this.recentContracts = [];
         this.maxRecentContracts = 10;
         this.currentNetwork = 'ethereum';
@@ -99,6 +100,18 @@ class TokenInspectorApp {
         this.tokenTransfersCount = document.getElementById('tokenTransfersCount');
         this.topHolders = document.getElementById('topHolders');
         this.holdersList = document.getElementById('holdersList');
+        
+        // Verification info elements
+        this.verificationInfo = document.getElementById('verificationInfo');
+        this.verificationStatus = document.getElementById('verificationStatus');
+        this.verificationLevel = document.getElementById('verificationLevel');
+        this.verificationMessage = document.getElementById('verificationMessage');
+        this.verificationDetails = document.getElementById('verificationDetails');
+        this.metaEarthItem = document.getElementById('metaEarthItem');
+        this.mempoolItem = document.getElementById('mempoolItem');
+        this.metaEarthStatus = document.getElementById('metaEarthStatus');
+        this.mempoolStatus = document.getElementById('mempoolStatus');
+        this.verificationBadges = document.getElementById('verificationBadges');
     }
 
     /**
@@ -185,6 +198,10 @@ class TokenInspectorApp {
             
             if (tokenInfo.success) {
                 this.displayTokenInfo(tokenInfo);
+                
+                // Perform verification in the background
+                this.performVerification(tokenInfo);
+                
                 this.addToRecentContracts(tokenInfo.address);
                 this.updateRecentSection();
             } else {
@@ -741,6 +758,134 @@ class TokenInspectorApp {
         } catch (error) {
             console.error('Failed to load theme:', error);
         }
+    }
+
+    /**
+     * Perform comprehensive verification
+     * @param {Object} tokenInfo - Token information
+     */
+    async performVerification(tokenInfo) {
+        console.log('Starting comprehensive verification...');
+        
+        try {
+            // Show verification section with loading state
+            this.verificationInfo.style.display = 'block';
+            this.verificationMessage.textContent = 'Checking verification status...';
+            this.verificationLevel.innerHTML = '<span class="level-badge level-checking">⏳</span>';
+            
+            // Perform comprehensive verification
+            const verificationResult = await this.verifier.performComprehensiveVerification(
+                tokenInfo.address,
+                this.currentNetwork,
+                tokenInfo
+            );
+            
+            console.log('Verification result:', verificationResult);
+            
+            // Display verification results
+            this.displayVerificationInfo(verificationResult);
+        } catch (error) {
+            console.error('Verification error:', error);
+            this.verificationMessage.textContent = 'Verification check failed';
+            this.verificationLevel.innerHTML = '<span class="level-badge level-error">❌</span>';
+        }
+    }
+
+    /**
+     * Display verification information
+     * @param {Object} verificationResult - Verification result
+     */
+    displayVerificationInfo(verificationResult) {
+        if (!verificationResult) {
+            this.verificationInfo.style.display = 'none';
+            return;
+        }
+        
+        this.verificationInfo.style.display = 'block';
+        
+        const { status, mempool, metaEarth } = verificationResult;
+        
+        // Update verification level badge
+        let levelBadge = '';
+        let levelClass = '';
+        
+        switch (status.level) {
+            case 'verified':
+                levelBadge = '✅';
+                levelClass = 'level-verified';
+                break;
+            case 'listed':
+                levelBadge = '📋';
+                levelClass = 'level-listed';
+                break;
+            case 'partial':
+                levelBadge = '⚠️';
+                levelClass = 'level-partial';
+                break;
+            case 'unverified':
+                levelBadge = '❌';
+                levelClass = 'level-unverified';
+                break;
+            default:
+                levelBadge = '❓';
+                levelClass = 'level-unknown';
+        }
+        
+        this.verificationLevel.innerHTML = `<span class="level-badge ${levelClass}">${levelBadge}</span>`;
+        this.verificationMessage.textContent = status.message;
+        
+        // Display meta-earth status
+        if (metaEarth) {
+            this.metaEarthItem.style.display = 'block';
+            if (metaEarth.matched) {
+                this.metaEarthStatus.textContent = metaEarth.verified ? '✅ Verified' : '📋 Listed';
+                this.metaEarthStatus.className = metaEarth.verified ? 'status-badge status-verified' : 'status-badge status-listed';
+            } else {
+                this.metaEarthStatus.textContent = '❌ Not Found';
+                this.metaEarthStatus.className = 'status-badge status-not-found';
+            }
+        }
+        
+        // Display mempool status
+        if (mempool) {
+            this.mempoolItem.style.display = 'block';
+            if (mempool.found) {
+                this.mempoolStatus.textContent = '✅ Found';
+                this.mempoolStatus.className = 'status-badge status-verified';
+            } else if (!mempool.applicable) {
+                this.mempoolStatus.textContent = '⚠️ Not Applicable';
+                this.mempoolStatus.className = 'status-badge status-partial';
+            } else {
+                this.mempoolStatus.textContent = '❌ Not Found';
+                this.mempoolStatus.className = 'status-badge status-not-found';
+            }
+        }
+        
+        // Display verification badges
+        if (status.badges && status.badges.length > 0) {
+            this.verificationBadges.innerHTML = '';
+            status.badges.forEach(badge => {
+                const badgeElement = document.createElement('span');
+                badgeElement.className = `verification-badge badge-${badge}`;
+                badgeElement.textContent = this.formatBadgeName(badge);
+                this.verificationBadges.appendChild(badgeElement);
+            });
+        }
+    }
+
+    /**
+     * Format badge name for display
+     * @param {string} badgeName - Badge name
+     * @returns {string} Formatted badge name
+     */
+    formatBadgeName(badgeName) {
+        const badgeMap = {
+            'meta-earth-verified': '✅ Meta-Earth',
+            'meta-earth-listed': '📋 Meta-Earth',
+            'mempool-verified': '✅ Mempool',
+            'explorer-verified': '✅ Explorer'
+        };
+        return badgeMap[badgeName] || badgeName;
     }
 
     /**

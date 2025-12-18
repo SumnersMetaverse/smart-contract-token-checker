@@ -178,6 +178,28 @@
                     <div class="holders-list" id="holdersList"></div>
                 </div>
             </div>
+
+            <!-- Verification Information -->
+            <div class="info-section" id="verificationInfo" style="display: none;">
+                <h3>Asset Verification</h3>
+                <div class="verification-status" id="verificationStatus">
+                    <div class="verification-level" id="verificationLevel">
+                        <span class="level-badge">-</span>
+                    </div>
+                    <div class="verification-message" id="verificationMessage">Checking verification status...</div>
+                </div>
+                <div class="verification-details" id="verificationDetails">
+                    <div class="verification-item" id="metaEarthItem" style="display: none;">
+                        <label>Meta-Earth Repository:</label>
+                        <span id="metaEarthStatus" class="status-badge">-</span>
+                    </div>
+                    <div class="verification-item" id="mempoolItem" style="display: none;">
+                        <label>Mempool.space:</label>
+                        <span id="mempoolStatus" class="status-badge">-</span>
+                    </div>
+                </div>
+                <div class="verification-badges" id="verificationBadges"></div>
+            </div>
         </div>
 
         <div class="recent-section" id="recentSection" style="display: none;">
@@ -197,6 +219,7 @@
     </div>
 
     <script src="lib/rpc.js"></script>
+    <script src="lib/verification.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

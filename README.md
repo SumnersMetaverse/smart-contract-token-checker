@@ -9,6 +9,8 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
 - **💰 Market Information**: Real-time price, market cap, and 24h change
 - **👥 Holders Analysis**: Holders count, transfers count, and top 5 holders
 - **🔗 Contract Details**: Owner, deployed block, verification status
+- **✅ Asset Verification**: Integration with mempool.space and meta-earth repository
+- **🛡️ Security Checks**: Multi-source verification for contract authenticity
 - **🎨 Modern UI**: Beautiful dark theme with golden accents
 - **⚡ Fast & Reliable**: Multiple RPC providers with automatic failover
 - **🔒 Privacy-First**: 100% client-side, no data collection
@@ -39,7 +41,32 @@ A comprehensive Chrome extension for inspecting ERC20 token contracts across mul
    - **Market Data**: Price, market cap, 24h change
    - **Contract Info**: Owner, deployed block, verification status
    - **Holders Data**: Holders count, transfers count, top 5 holders
+   - **Verification Status**: Multi-source verification results
 5. **Quick Actions**: Copy address, open in explorer
+
+## 🛡️ Asset Verification
+
+The extension now includes comprehensive asset verification across multiple sources:
+
+### Verification Sources
+
+1. **Meta-Earth Repository**: Community-curated catalog of verified contracts
+2. **Mempool.space**: Bitcoin blockchain verification (for BTC-related assets)
+3. **Block Explorer**: Contract verification status from Etherscan/Polygonscan/BSCScan
+
+### Verification Levels
+
+- **✅ Verified**: Contract is verified in meta-earth repository
+- **📋 Listed**: Contract is listed but not yet verified
+- **⚠️ Partial**: Verified on some sources but not all
+- **❌ Unverified**: No verification found in any source
+
+### How Verification Works
+
+1. When you inspect a token, the extension checks multiple verification sources
+2. Results from mempool.space and meta-earth repository are compared
+3. A comprehensive verification status is displayed with badges
+4. Users can see which sources verified the contract
 
 ## 🔧 Supported Networks
 
@@ -157,6 +184,12 @@ smart-contract-token-checker/
 1. Clone the repository
 2. No build process required - pure HTML/CSS/JS
 3. Load as unpacked extension in Chrome
+
+## 📚 Documentation
+
+- **[VERIFICATION.md](VERIFICATION.md)**: Comprehensive guide to the asset verification system
+- **[CHANGELOG.md](CHANGELOG.md)**: Detailed version history and changes
+- **[assets/README.md](assets/README.md)**: Meta-earth catalog documentation
 
 ## 📝 Version History
 
