@@ -62,6 +62,85 @@
             </div>
         </div>
 
+        <!-- Validation & Verification Section -->
+        <div class="validation-section" id="validationSection" style="display: none;">
+            <div class="info-section">
+                <h3>Validation & Verification</h3>
+                <div class="validation-controls">
+                    <button class="action-btn primary" id="validateContractBtn" title="Validate Current Contract">
+                        ✓ Validate Contract
+                    </button>
+                    <button class="action-btn secondary" id="batchValidateBtn" title="Batch Validate Multiple Contracts">
+                        📦 Batch Validate
+                    </button>
+                    <button class="action-btn secondary" id="viewValidatedBtn" title="View All Validated Contracts">
+                        📋 View Validated
+                    </button>
+                    <button class="action-btn secondary" id="validationStatsBtn" title="View Statistics">
+                        📊 Statistics
+                    </button>
+                </div>
+                
+                <div class="validation-status" id="validationStatus" style="display: none;">
+                    <div class="status-badge" id="validationStatusBadge">-</div>
+                    <div class="status-details" id="validationDetails"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validated Contracts List -->
+        <div class="validated-contracts-section" id="validatedContractsSection" style="display: none;">
+            <div class="info-section">
+                <div class="section-header">
+                    <h3>Validated Contracts</h3>
+                    <button class="action-btn small" id="closeValidatedBtn" title="Close">✕</button>
+                </div>
+                <div class="validated-contracts-list" id="validatedContractsList"></div>
+            </div>
+        </div>
+
+        <!-- Validation Statistics -->
+        <div class="validation-stats-section" id="validationStatsSection" style="display: none;">
+            <div class="info-section">
+                <div class="section-header">
+                    <h3>Validation Statistics</h3>
+                    <button class="action-btn small" id="closeStatsBtn" title="Close">✕</button>
+                </div>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+        </div>
+
+        <!-- Batch Validation Section -->
+        <div class="batch-validation-section" id="batchValidationSection" style="display: none;">
+            <div class="info-section">
+                <div class="section-header">
+                    <h3>Batch Validation</h3>
+                    <button class="action-btn small" id="closeBatchBtn" title="Close">✕</button>
+                </div>
+                <div class="batch-input-section">
+                    <label for="batchInput">Enter contract addresses (one per line):</label>
+                    <textarea id="batchInput" class="batch-textarea" placeholder="0x1234567890abcdef1234567890abcdef12345678&#10;0xabcdef1234567890abcdef1234567890abcdef12&#10;..." rows="8"></textarea>
+                    <div class="batch-controls">
+                        <select id="batchNetworkSelect" class="network-select">
+                            <option value="ethereum">Ethereum</option>
+                            <option value="polygon">Polygon</option>
+                            <option value="bsc">BSC</option>
+                        </select>
+                        <button class="action-btn primary" id="startBatchValidationBtn">
+                            🚀 Start Batch Validation
+                        </button>
+                    </div>
+                </div>
+                <div class="batch-progress" id="batchProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Processing...</div>
+                </div>
+                <div class="batch-results" id="batchResults" style="display: none;"></div>
+            </div>
+        </div>
+
         <div class="results-section" id="resultsSection" style="display: none;">
             <!-- Token Header Card -->
             <div class="token-header-card">
@@ -196,7 +275,8 @@
         </footer>
     </div>
 
-    <script src="lib/rpc.js"></script>
-    <script src="popup.js"></script>
+    <script src="lib/rpc.js" defer></script>
+    <script src="lib/validator.js" defer></script>
+    <script src="popup.js" defer></script>
 </body>
 </html>
