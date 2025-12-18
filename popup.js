@@ -863,7 +863,7 @@ class TokenInspectorApp {
     async handleBatchInspect() {
         const addresses = this.batchContractInput.value
             .split('\n')
-            .map(addr => addr.trim())
+            .map(addr => addr.trim().toLowerCase()) // Normalize to lowercase
             .filter(addr => addr && addr.length > 0);
         
         if (addresses.length === 0) {
@@ -888,13 +888,9 @@ class TokenInspectorApp {
         this.hideError();
         this.batchResults = [];
         this.batchResultsSection.style.display = 'block';
-        this.updateBatchResults();
         
-        // Process each address
-        for (let i = 0; i < validAddresses.length; i++) {
-            const address = validAddresses[i];
-            
-            // Add pending status
+        // Initialize results with pending status
+        validAddresses.forEach(address => {
             this.batchResults.push({
                 address,
                 status: 'loading',
@@ -903,7 +899,13 @@ class TokenInspectorApp {
                 decimals: '-',
                 totalSupply: '-'
             });
-            this.updateBatchResults();
+        });
+        this.updateBatchResults();
+        
+        // Process each address with throttled UI updates
+        let updateCounter = 0;
+        for (let i = 0; i < validAddresses.length; i++) {
+            const address = validAddresses[i];
             
             try {
                 const tokenInfo = await this.inspector.inspectToken(address);
@@ -932,7 +934,12 @@ class TokenInspectorApp {
                 };
             }
             
-            this.updateBatchResults();
+            // Throttle UI updates - only update every 3 items or on the last item
+            updateCounter++;
+            if (updateCounter >= 3 || i === validAddresses.length - 1) {
+                this.updateBatchResults();
+                updateCounter = 0;
+            }
         }
         
         this.setLoadingBatch(false);
@@ -993,12 +1000,27 @@ class TokenInspectorApp {
                 <td>${result.decimals}</td>
                 <td>${result.totalSupply}</td>
                 <td class="batch-actions-cell">
-                    <button onclick="window.open('${config.explorerUrl}/token/${result.address}', '_blank')">View</button>
-                    ${result.status === 'success' ? `<button onclick="app.saveContractFromBatch(${index})">Save</button>` : ''}
+                    <button class="batch-view-btn" data-url="${config.explorerUrl}/token/${result.address}">View</button>
+                    ${result.status === 'success' ? `<button class="batch-save-btn" data-index="${index}">Save</button>` : ''}
                 </td>
             `;
             
             this.batchResultsBody.appendChild(row);
+        });
+        
+        // Add event listeners using delegation
+        this.batchResultsBody.querySelectorAll('.batch-view-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const url = e.target.getAttribute('data-url');
+                window.open(url, '_blank');
+            });
+        });
+        
+        this.batchResultsBody.querySelectorAll('.batch-save-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                this.saveContractFromBatch(index);
+            });
         });
     }
 
@@ -1044,6 +1066,17 @@ class TokenInspectorApp {
             return;
         }
         
+        // Helper function to properly escape CSV cells
+        const escapeCSV = (value) => {
+            if (value == null) return '""';
+            const stringValue = String(value);
+            // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        };
+        
         const headers = ['Status', 'Address', 'Name', 'Symbol', 'Decimals', 'Total Supply', 'Network'];
         const rows = this.batchResults.map(result => [
             result.status === 'success' ? 'Valid' : 'Failed',
@@ -1056,10 +1089,10 @@ class TokenInspectorApp {
         ]);
         
         const csvContent = [headers, ...rows]
-            .map(row => row.map(cell => `"${cell}"`).join(','))
+            .map(row => row.map(cell => escapeCSV(cell)).join(','))
             .join('\n');
         
-        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1133,7 +1166,7 @@ class TokenInspectorApp {
      * Add new contract to saved contracts
      */
     async addNewContract() {
-        const address = this.newContractInput.value.trim();
+        const address = this.newContractInput.value.trim().toLowerCase(); // Normalize to lowercase
         const label = this.newContractLabel.value.trim();
         
         if (!address) {
@@ -1146,15 +1179,15 @@ class TokenInspectorApp {
             return;
         }
         
-        // Check if already exists
-        const exists = this.savedContracts.some(c => c.address.toLowerCase() === address.toLowerCase());
+        // Check if already exists (case-insensitive comparison)
+        const exists = this.savedContracts.some(c => c.address.toLowerCase() === address);
         if (exists) {
             this.showError('Contract already saved');
             return;
         }
         
         const contract = {
-            address: address.toLowerCase(),
+            address: address,
             label: label || 'Unnamed Contract',
             network: this.currentNetwork,
             addedAt: Date.now()
@@ -1235,12 +1268,27 @@ class TokenInspectorApp {
                     <div class="saved-contract-address">${contract.address}</div>
                 </div>
                 <div class="saved-contract-actions">
-                    <button onclick="app.verifySavedContract(${index})">Verify</button>
-                    <button onclick="app.removeSavedContract(${index})">Remove</button>
+                    <button class="verify-contract-btn" data-index="${index}">Verify</button>
+                    <button class="remove-contract-btn" data-index="${index}">Remove</button>
                 </div>
             `;
             
             this.savedContractsList.appendChild(item);
+        });
+        
+        // Add event listeners using delegation
+        this.savedContractsList.querySelectorAll('.verify-contract-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                this.verifySavedContract(index);
+            });
+        });
+        
+        this.savedContractsList.querySelectorAll('.remove-contract-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                this.removeSavedContract(index);
+            });
         });
     }
 
@@ -1272,11 +1320,19 @@ class TokenInspectorApp {
 }
 
 // Initialize app when DOM is loaded
-let app; // Make app globally accessible
-document.addEventListener('DOMContentLoaded', async () => {
-    app = new TokenInspectorApp();
-    await app.loadTheme();
-});
+(function() {
+    let app; // Scoped app instance
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+        app = new TokenInspectorApp();
+        await app.loadTheme();
+        
+        // Make app accessible only if needed for debugging (can be removed in production)
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            window.app = app;
+        }
+    });
+})();
 
 // Handle extension installation/update
 chrome.runtime.onInstalled.addListener((details) => {
