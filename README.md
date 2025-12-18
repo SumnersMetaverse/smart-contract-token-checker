@@ -185,6 +185,12 @@ smart-contract-token-checker/
 2. No build process required - pure HTML/CSS/JS
 3. Load as unpacked extension in Chrome
 
+## 📚 Documentation
+
+- **[VERIFICATION.md](VERIFICATION.md)**: Comprehensive guide to the asset verification system
+- **[CHANGELOG.md](CHANGELOG.md)**: Detailed version history and changes
+- **[assets/README.md](assets/README.md)**: Meta-earth catalog documentation
+
 ## 📝 Version History
 
 ### [3.0.0] - Complete Redesign
